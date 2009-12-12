@@ -1,0 +1,25 @@
+NAME
+	countd
+
+SYNOPSIS
+
+DESCRIPTION
+
+INSTALLATION
+
+DEPENDENCIES
+
+VERSION
+	0.1
+
+DATE
+	2009-12-12
+
+AUTHORS
+	Richard Crowley <r@rcrowley.org>
+
+SEE ALSO
+	<http://github.com/rcrowley/countd.git>
+
+LICENSE
+	<http://www.freebsd.org/copyright/freebsd-license.html>
