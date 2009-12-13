@@ -5,9 +5,15 @@ SYNOPSIS
 
 DESCRIPTION
 
+PROTOCOL
+	Requests are fixed-length packets containing an 8-byte counter and two
+	fixed-length, null-padded strings.  The first string is the keyspace and
+	the second is the key.
+
 INSTALLATION
 
 DEPENDENCIES
+	libev-3.8 <http://software.schmorp.de/pkg/libev.html>
 
 VERSION
 	0.1
