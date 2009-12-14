@@ -1,6 +1,9 @@
+#ifndef OPENDNS_COUNTD_CLIENT_H
+#define OPENDNS_COUNTD_CLIENT_H
+
 #include <ev.h>
-#include <exception>
 #include <netinet/in.h>
+#include <new>
 #include <stdint.h>
 
 namespace opendns { namespace countd {
@@ -20,7 +23,7 @@ void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 	struct ev_loop *loop,
 	ev_io *io,
 	int revents
-)) throw (ClientException);
+)) throw (std::bad_alloc, ClientException);
 Client *resume(struct ev_loop *loop, ev_io *io, int revents);
 
 struct Request {
@@ -39,6 +42,7 @@ struct Request {
 	Client *client;
 
 	Request(Client *client) throw (ClientException);
+
 	void respond(int code);
 
 };
@@ -46,3 +50,5 @@ struct Request {
 } // namespace opendns::countd::client
 
 }} // namespace opendns::countd
+
+#endif

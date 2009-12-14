@@ -1,5 +1,6 @@
 #include "client.h"
 #include <ev.h>
+#include <exception>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <new>
@@ -16,13 +17,9 @@ void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 	struct ev_loop *loop,
 	ev_io *io,
 	int revents
-)) throw (ClientException) {
+)) throw (bad_alloc, ClientException) {
 
-	Client *client = new(nothrow) Client;
-	if (!client) {
-		perror("[client] new(nothrow) Client");
-		throw ClientException();
-	}
+	Client *client = new Client;
 	memset(client, 0, sizeof(Client));
 
 	socklen_t len = sizeof(struct sockaddr_in);

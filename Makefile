@@ -7,11 +7,16 @@ LDFLAGS=-L/usr/local/lib -lev
 #SOURCES=$(shell find src/ -type f -name \*.c -or -name \*.cc -printf %P\\n)
 SOURCES=\
 	src/opendns/countd/client.cc \
+	src/opendns/countd/commitlog.cc \
 	src/countd-write.cc
 OBJECTS=$(SOURCES:.cc=.o)
 
 all: $(SOURCES) $(OBJECTS)
-	$(CXX) src/opendns/countd/client.o src/countd-write.o $(LDFLAGS) -o bin/countd-write
+	$(CXX) \
+		src/opendns/countd/client.o \
+		src/opendns/countd/commitlog.o \
+		src/countd-write.o \
+		$(LDFLAGS) -o bin/countd-write
 #	$(CXX) TODO $(LDFLAGS) -o bin/countd-work
 #	$(CXX) TODO $(LDFLAGS) -o bin/countd-read
 

@@ -4,7 +4,9 @@
  */
 
 #include "opendns/countd/client.h"
+#include "opendns/countd/commitlog.h"
 #include <ev.h>
+#include <new>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +15,9 @@
 #include <unistd.h>
 
 using namespace opendns::countd;
+using namespace std;
+
+static CommitLog *commitlog = 0; // FIXME
 
 static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 	Client *client = client::resume(loop, io, revents);
@@ -22,6 +27,7 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 		client::Request request(client);
 		printf("DEBUG keyspace: %s, key: %s, increment: %lld\n",
 			request.keyspace, request.key, request.increment);
+		commitlog->commit(&request);
 		request.respond(client::Request::SUCCESS);
 	}
 
@@ -32,6 +38,7 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 
 	catch (ClientException &e) {
 		printf("DEBUG caught ClientException\n");
+		//request.respond(client::Request::FAILURE); // FIXME
 	}
 
 }
@@ -43,6 +50,10 @@ void accept_cb(struct ev_loop *loop, ev_io *io, int revents) {
 int main(int argc, char **argv) {
 
 	int port = 48879; // TODO Configurable
+
+	// Commit log
+	fprintf(stderr, "[countd-write] creating commit log\n");
+	commitlog = new CommitLog;
 
 	// Listen 
 	fprintf(stderr, "[countd-write] listening\n");
@@ -71,6 +82,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Fire up the event loop
+	//   TODO Add 1-second fdatasync timer
 	fprintf(stderr, "[countd-write] starting event loop\n");
 	struct ev_loop *loop = ev_default_loop(0);
 	ev_io io;

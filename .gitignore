@@ -1,3 +1,5 @@
 *.o
 *.o.dSYM
 bin/countd-*
+*.swp
+NOTES
