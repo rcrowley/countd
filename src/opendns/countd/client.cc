@@ -1,4 +1,5 @@
 #include "client.h"
+#include "message.h"
 #include <ev.h>
 #include <exception>
 #include <fcntl.h>
@@ -20,7 +21,6 @@ void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 )) throw (bad_alloc, ClientException) {
 
 	Client *client = new Client;
-	memset(client, 0, sizeof(Client));
 
 	socklen_t len = sizeof(struct sockaddr_in);
 	client->fd = accept(io->fd, (struct sockaddr *)&client->addr, &len);
@@ -51,9 +51,9 @@ Client *resume(struct ev_loop *loop, ev_io *io, int revents) {
 }
 
 Request::Request(Client *client) throw (ClientException) {
-	ssize_t len = read(client->fd, this, 8 + 256 + 256); // TODO Configurable
+	ssize_t len = read(client->fd, this, sizeof(message::Write));
 	if (!len) { throw ClientDisconnectException(); }
-	if (8 + 256 + 256 != len) { throw ClientException(); }
+	if (sizeof(message::Write) != len) { throw ClientException(); }
 	this->client = client;
 }
 

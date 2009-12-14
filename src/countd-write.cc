@@ -1,8 +1,3 @@
-/*
- * With apologies to william-os4y.
- * http://github.com/william-os4y/fapws3/blob/master/fapws/_evwsgi.c
- */
-
 #include "opendns/countd/client.h"
 #include "opendns/countd/commitlog.h"
 #include <ev.h>
@@ -26,7 +21,7 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 	try {
 		client::Request request(client);
 		printf("DEBUG keyspace: %s, key: %s, increment: %lld\n",
-			request.keyspace, request.key, request.increment);
+			request.message.keyspace, request.message.key, request.message.increment);
 		commitlog->commit(&request);
 		request.respond(client::Request::SUCCESS);
 	}
@@ -76,7 +71,7 @@ int main(int argc, char **argv) {
 		perror("[countd-write] bind");
 		return 1;
 	}
-	if (0 > listen(fd, 1000)) {
+	if (0 > listen(fd, 1000)) { // TODO Configurable?  Better hard-coded value?
 		perror("[countd-write] listen");
 		return 1;
 	}

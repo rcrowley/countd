@@ -22,8 +22,7 @@ CommitLog::CommitLog() {
 	}
 
 	// Check the log files; maybe create them and write them full
-	char empty[8 + 256 + 256];
-	memset(empty, 0, 8 + 256 + 256);
+	message::Write empty;
 	for (size_t i = 0; i < CommitLog::files; ++i) {
 		char pathname[256]; // FIXME
 		sprintf(pathname, "%s/%010ld", CommitLog::dirname, i);
@@ -39,14 +38,14 @@ CommitLog::CommitLog() {
 			}
 
 			// FIXME Does this technique actually create contiguous files?
-			for (size_t j = 0; j < CommitLog::filesize; j += 8 + 256 + 256) { // TODO Configurable
-				ssize_t len = write(fd, empty, 8 + 256 + 256);
+			for (size_t j = 0; j < CommitLog::filesize; j += sizeof(message::Write)) {
+				ssize_t len = write(fd, &empty, sizeof(message::Write));
 				if (0 > len) {
 					perror("[commitlog] write");
 					close(fd);
 					throw CommitLogException();
 				}
-				if (8 + 256 + 256 != len) {
+				if (sizeof(message::Write) != len) {
 					close(fd);
 					throw CommitLogException();
 				}
@@ -60,23 +59,24 @@ CommitLog::CommitLog() {
 		if (CommitLog::files != this->file) { continue; }
 		int fd = open(pathname, O_RDONLY);
 		if (0 > fd) { throw CommitLogException(); }
-		char buf[8 + 256 + 256];
-		ssize_t len = read(fd, buf, 8 + 256 + 256);
+		char buf[sizeof(message::Write)];
+		ssize_t len = read(fd, buf, sizeof(message::Write));
 		if (0 > len) {
 			perror("[commitlog] read");
 			close(fd);
 			throw CommitLogException();
 		}
-		if (8 + 256 + 256 != len) {
+		if (sizeof(message::Write) != len) {
 			close(fd);
 			throw CommitLogException();
 		}
-		if (!memcmp(empty, buf, 8 + 256 + 256)) { this->file = i; }
+		if (!memcmp(&empty, buf, sizeof(message::Write))) { this->file = i; }
 		close(fd);
 
 	}
 
 	// Open the initial commit log
+	// FIXME This breaks when all commit log files have data in them
 	char pathname[256]; // FIXME
 	sprintf(pathname, "%s/%010ld", CommitLog::dirname, this->file);
 	this->fd = open(pathname, O_WRONLY | O_EXLOCK);
@@ -90,7 +90,7 @@ CommitLog::~CommitLog() {
 }
 
 void CommitLog::commit(client::Request *request) {
-	ssize_t len = write(this->fd, request, 8 + 256 + 256);
+	ssize_t len = write(this->fd, request->message, sizeof(message::Write));
 	if (0 > len) {
 		perror("[commitlog] write");
 		throw CommitLogException();

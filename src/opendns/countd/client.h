@@ -1,15 +1,15 @@
 #ifndef OPENDNS_COUNTD_CLIENT_H
 #define OPENDNS_COUNTD_CLIENT_H
 
+#include "message.h"
 #include <ev.h>
 #include <netinet/in.h>
 #include <new>
-#include <stdint.h>
 
 namespace opendns { namespace countd {
 
-struct ClientException : public std::exception {};
-struct ClientDisconnectException : public ClientException {};
+class ClientException : public std::exception {};
+class ClientDisconnectException : public ClientException {};
 
 struct Client {
 	ev_io io;
@@ -27,17 +27,13 @@ void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 Client *resume(struct ev_loop *loop, ev_io *io, int revents);
 
 struct Request {
-
 	enum {
 		SUCCESS,
 		FAILURE
 	};
 
-	// These need to be first and in this order so we can read straight
-	// from the wire
-	int64_t increment;
-	char keyspace[256]; // TODO Configurable
-	char key[256]; // TODO Configurable
+	// This needs to be first so we can read straight from the wire
+	message::Write message;
 
 	Client *client;
 
