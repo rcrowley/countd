@@ -90,7 +90,7 @@ CommitLog::~CommitLog() {
 }
 
 void CommitLog::commit(client::Request *request) {
-	ssize_t len = write(this->fd, request->message, sizeof(message::Write));
+	ssize_t len = write(this->fd, &request->message, sizeof(message::Write));
 	if (0 > len) {
 		perror("[commitlog] write");
 		throw CommitLogException();
