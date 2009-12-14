@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 using namespace opendns::countd;
@@ -19,9 +20,10 @@ int main(int argc, char **argv) {
 
 	int fd = open(pathname, O_RDONLY);
 	if (0 > fd) { return 1; }
-	message::Write message;
+	message::Write message, empty;
 	while (sizeof(message::Write) == read(fd, &message, sizeof(message::Write))) {
-		printf("%34s %34s %10lld\n", message.keyspace, message.key, message.increment);
+		if (!memcmp(&empty, &message, sizeof(message::Write))) { continue; }
+		printf("%-34s %-34s %10lld\n", message.keyspace, message.key, message.increment);
 	}
 
 	return 0;
