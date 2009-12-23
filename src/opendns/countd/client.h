@@ -5,6 +5,7 @@
 #include <ev.h>
 #include <netinet/in.h>
 #include <new>
+#include <stdint.h>
 
 namespace opendns { namespace countd {
 
@@ -12,7 +13,10 @@ class ClientException : public std::exception {};
 class ClientDisconnectException : public ClientException {};
 
 struct Client {
+
+	// This must be first so that (Client *)io works.
 	ev_io io;
+
 	int fd;
 	struct sockaddr_in addr;
 };
@@ -27,14 +31,10 @@ void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 Client *resume(struct ev_loop *loop, ev_io *io, int revents);
 
 struct Request {
-	enum {
-		SUCCESS,
-		FAILURE
-	};
+	const static int32_t SUCCESS = 0;
+	const static int32_t FAILURE = 1;
 
-	// This needs to be first so we can read straight from the wire
 	message::Write message;
-
 	Client *client;
 
 	Request(Client *client) throw (ClientException);

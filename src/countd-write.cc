@@ -12,12 +12,14 @@
 using namespace opendns::countd;
 using namespace std;
 
-static CommitLog *commitlog = 0; // FIXME
+static CommitLog *commitlog = 0; // FIXME Global
 
+// A connected Client has made a Requeset, we read() it and write() a response.
 static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
-	Client *client = client::resume(loop, io, revents);
 	if (!(revents & EV_READ)) { return; }
+	Client *client = client::resume(loop, io, revents);
 
+	// Create the Request (this reads from the wire).
 	try {
 		client::Request request(client);
 		printf("DEBUG keyspace: %s, key: %s, increment: %lld\n",
@@ -38,19 +40,21 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 
 }
 
+// A new Client has connected, we accept() it.
 void accept_cb(struct ev_loop *loop, ev_io *io, int revents) {
 	client::init(loop, io, revents, connection_cb);
 }
 
+// The write side of the countd server.
 int main(int argc, char **argv) {
 
 	int port = 48879; // TODO Configurable
 
-	// Commit log
+	// Commit log.
 	fprintf(stderr, "[countd-write] creating commit log\n");
 	commitlog = new CommitLog;
 
-	// Listen 
+	// Listen.
 	fprintf(stderr, "[countd-write] listening\n");
 	int fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (0 > fd) {
@@ -76,7 +80,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	// Fire up the event loop
+	// Fire up the event loop.
 	//   TODO Add 1-second fdatasync timer
 	fprintf(stderr, "[countd-write] starting event loop\n");
 	struct ev_loop *loop = ev_default_loop(0);

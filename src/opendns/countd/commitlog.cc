@@ -9,25 +9,25 @@
 
 namespace opendns { namespace countd {
 
-const char *CommitLog::dirname = "/tmp/countd"; // TODO Configurable
+const char *CommitLog::DIRNAME = "/tmp/countd"; // TODO Configurable
+const char *CommitLog::PATHNAME_FORMAT = "%s/%010ld"; // TODO Configurable
 
-CommitLog::CommitLog() {
-	this->file = CommitLog::files; // Placeholder
+CommitLog::CommitLog() : files(FILES), file(files) {
 
-	// Check the data directory; maybe create it
-	int result = mkdir(CommitLog::dirname, 0755);
+	// Check the data directory; maybe create it.
+	int result = mkdir(CommitLog::DIRNAME, 0755);
 	if (result && EEXIST != errno) {
 		if (result) { perror("[commitlog] mkdir"); }
 		throw CommitLogException();
 	}
 
-	// Check the log files; maybe create them and write them full
+	// Check the log files; maybe create them and write them full.
 	message::Write empty;
 	for (size_t i = 0; i < CommitLog::files; ++i) {
-		char pathname[256]; // FIXME
-		sprintf(pathname, "%s/%010ld", CommitLog::dirname, i);
+		char pathname[4096]; // FIXME
+		CommitLog::pathname_format(pathname, i);
 
-		// Make sure the file exists and is filled
+		// Make sure the file exists and is filled.
 		struct stat s;
 		if (stat(pathname, &s) || CommitLog::filesize != s.st_size) {
 			// FIXME Make sure we're not overwriting unprocessed data
@@ -37,7 +37,6 @@ CommitLog::CommitLog() {
 				throw CommitLogException();
 			}
 
-			// FIXME Does this technique actually create contiguous files?
 			for (size_t j = 0; j < CommitLog::filesize; j += sizeof(message::Write)) {
 				ssize_t len = write(fd, &empty, sizeof(message::Write));
 				if (0 > len) {
@@ -55,7 +54,7 @@ CommitLog::CommitLog() {
 			close(fd);
 		}
 
-		// Choose the initial commit log
+		// Choose the initial commit log.
 		if (CommitLog::files != this->file) { continue; }
 		int fd = open(pathname, O_RDONLY);
 		if (0 > fd) { throw CommitLogException(); }
@@ -75,10 +74,10 @@ CommitLog::CommitLog() {
 
 	}
 
-	// Open the initial commit log
+	// Open the initial commit log.
 	// FIXME This breaks when all commit log files have data in them
-	char pathname[256]; // FIXME
-	sprintf(pathname, "%s/%010ld", CommitLog::dirname, this->file);
+	char pathname[4096]; // FIXME
+	CommitLog::pathname_format(pathname, this->file);
 	this->fd = open(pathname, O_WRONLY | O_EXLOCK);
 	if (0 > fd) { throw CommitLogException(); }
 
@@ -89,6 +88,12 @@ CommitLog::~CommitLog() {
 	close(this->fd);
 }
 
+// Resolve the full pathname of a commit log.
+void CommitLog::pathname_format(char *pathname, size_t file) {
+	sprintf(pathname, CommitLog::PATHNAME_FORMAT, CommitLog::DIRNAME, file);
+}
+
+// Commit a Request.
 void CommitLog::commit(client::Request *request) {
 	ssize_t len = write(this->fd, &request->message, sizeof(message::Write));
 	if (0 > len) {

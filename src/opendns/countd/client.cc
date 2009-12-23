@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <new>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -14,6 +15,7 @@ using namespace std;
 
 namespace opendns { namespace countd { namespace client {
 
+// Create a new Client, accept() the connection and register callbacks.
 void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 	struct ev_loop *loop,
 	ev_io *io,
@@ -40,24 +42,27 @@ void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 		throw ClientException();
 	}
 
-	// This is how we'll get this pointer back when new events come
+	// This is how we'll get this pointer back when new events come.
 	ev_io_init(&client->io, callback, client->fd, EV_READ);
 	ev_io_start(loop, &client->io);
 
 }
 
+// A Client has returned.  The ev_io is a part of the Client struct.
 Client *resume(struct ev_loop *loop, ev_io *io, int revents) {
 	return (Client *)io;
 }
 
+// Create a Request by read()ing from the wire.
 Request::Request(Client *client) throw (ClientException) {
-	ssize_t len = read(client->fd, this, sizeof(message::Write));
+	ssize_t len = read(client->fd, &this->message, sizeof(message::Write));
 	if (!len) { throw ClientDisconnectException(); }
 	if (sizeof(message::Write) != len) { throw ClientException(); }
 	this->client = client;
 }
 
-void Request::respond(int code) {
+// Respond to a Request with the given code.
+void Request::respond(int32_t code) {
 	if (0 > write(client->fd, "WIN", 3)) {
 		throw ClientException();
 	}
