@@ -19,7 +19,7 @@ struct Write {
 	char keyspace[KEYSPACE];
 	char key[KEY];
 
-	Write();
+	Write(bool zero = false);
 	Write(const Write &that);
 	Write(const void *that);
 	Write(const int64_t increment, const char *keyspace, const char *key);

@@ -4,7 +4,9 @@
 namespace opendns { namespace countd { namespace message {
 
 // Create a Write message as cheaply as possible.
-Write::Write() { /* memset(this, 0, sizeof(Write)); */ }
+Write::Write(bool zero) {
+	if (zero) { memset(this, 0, sizeof(Write)); }
+}
 
 // Create a Write message from another message.
 Write::Write(const Write &that) { memcpy(this, &that, sizeof(Write)); }
