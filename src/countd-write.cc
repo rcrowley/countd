@@ -14,6 +14,12 @@ using namespace std;
 
 static CommitLog *commitlog = 0; // FIXME Global
 
+// Exit when we receive SIGINT.
+static void sigint_cb(struct ev_loop *loop, ev_signal *signal, int revents) {
+	fprintf(stderr, "[countd-write] SIGINT\n");
+	ev_unloop(loop, EVUNLOOP_ALL);
+}
+
 // A connected Client has made a Requeset, we read() it and write() a response.
 static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 	if (!(revents & EV_READ)) { return; }
@@ -84,10 +90,14 @@ int main(int argc, char **argv) {
 	//   TODO Add 1-second fdatasync timer
 	fprintf(stderr, "[countd-write] starting event loop\n");
 	struct ev_loop *loop = ev_default_loop(0);
+	ev_signal sigint;
+	ev_signal_init(&sigint, sigint_cb, SIGINT);
+	ev_signal_start(loop, &sigint);
 	ev_io io;
 	ev_io_init(&io, accept_cb, fd, EV_READ);
 	ev_io_start(loop, &io);
 	ev_loop(loop, 0);
 
+	delete commitlog;
 	return 0;
 }
