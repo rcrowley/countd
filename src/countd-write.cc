@@ -26,23 +26,23 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 	Client *client = client::resume(loop, io, revents);
 
 	// Create the Request (this reads from the wire).
-	try {
-		client::Request request(client);
-		printf("DEBUG keyspace: %s, key: %s, increment: %lld\n",
-			request.message.keyspace, request.message.key, request.message.increment);
-		_commitlog->commit(&request);
-		request.respond(client::Request::SUCCESS);
-	}
-
-	catch (ClientDisconnectException &e) {
+	client::Request request(client);
+	ssize_t len = request.read();
+	if (!len) {
 		ev_io_stop(loop, io);
 		delete client;
+		return;
+	}
+	if (sizeof(message::Write) != len) {
+		printf("DEBUG Request::read: %ld != %ld\n", sizeof(message::Write), len);
+		//request.write(client::Request::FAILURE); // FIXME
+		return;
 	}
 
-	catch (ClientException &e) {
-		printf("DEBUG caught ClientException\n");
-		//request.respond(client::Request::FAILURE); // FIXME
-	}
+	printf("DEBUG keyspace: %s, key: %s, increment: %lld\n",
+		request.message.keyspace, request.message.key, request.message.increment);
+	_commitlog->write(&request);
+	request.write(client::Request::SUCCESS);
 
 }
 

@@ -4,13 +4,9 @@
 #include "message.h"
 #include <ev.h>
 #include <netinet/in.h>
-#include <new>
 #include <stdint.h>
 
 namespace opendns { namespace countd {
-
-class ClientException : public std::exception {};
-class ClientDisconnectException : public ClientException {};
 
 struct Client {
 
@@ -23,23 +19,25 @@ struct Client {
 
 namespace client {
 
-void init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
+bool init(struct ev_loop *loop, ev_io *io, int revents, void(callback)(
 	struct ev_loop *loop,
 	ev_io *io,
 	int revents
-)) throw (std::bad_alloc, ClientException);
+));
 Client *resume(struct ev_loop *loop, ev_io *io, int revents);
 
 struct Request {
-	const static int32_t SUCCESS = 0;
-	const static int32_t FAILURE = 1;
+	enum {
+		SUCCESS,
+		FAILURE
+	};
 
 	message::Write message;
 	Client *client;
 
-	Request(Client *client) throw (ClientException);
-
-	void respond(int code);
+	Request(Client *client);
+	ssize_t read();
+	ssize_t write(int code);
 
 };
 

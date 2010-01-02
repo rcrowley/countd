@@ -1,6 +1,6 @@
 CC=gcc
 CXX=g++
-CFLAGS=-O2 -Wall -g -I/usr/local/include
+CFLAGS=-O2 -fno-exceptions -Wall -g -I/usr/local/include
 CXXFLAGS=
 LDFLAGS=-L/usr/local/lib -lev
 
