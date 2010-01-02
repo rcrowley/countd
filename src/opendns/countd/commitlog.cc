@@ -78,8 +78,8 @@ chosen:
 }
 
 // Commit a Request.
-bool CommitLog::commit(client::Request *request) {
-	if (0 > write(this->file.fd, &request->message, sizeof(message::Write))) {
+bool CommitLog::write(client::Request *request) {
+	if (0 > ::write(this->file.fd, &request->message, sizeof(message::Write))) {
 		perror("[commitlog] write");
 		return false;
 	}

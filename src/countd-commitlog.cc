@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	int fd = open(file.pathnames.normal, O_RDONLY);
 	if (0 > fd) { return 1; }
 	message::Write message, empty;
-	while (sizeof(message::Write) == read(fd, &message, sizeof(message::Write))) {
+	while (sizeof(message::Write) == ::read(fd, &message, sizeof(message::Write))) {
 		if (!memcmp(&empty, &message, sizeof(message::Write))) { continue; }
 		printf("%-34s %-34s %10lld\n",
 			message.keyspace, message.key, message.increment);

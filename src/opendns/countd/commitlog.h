@@ -22,7 +22,7 @@ struct CommitLog {
 	virtual ~CommitLog();
 
 	bool choose();
-	bool commit(client::Request *request);
+	bool write(client::Request *request);
 
 };
 

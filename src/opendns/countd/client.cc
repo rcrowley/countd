@@ -55,7 +55,7 @@ Client *resume(struct ev_loop *loop, ev_io *io, int revents) {
 
 // Create a Request by read()ing from the wire.
 Request::Request(Client *client) throw (ClientException) {
-	ssize_t len = read(client->fd, &this->message, sizeof(message::Write));
+	ssize_t len = ::read(client->fd, &this->message, sizeof(message::Write));
 	if (!len) { throw ClientDisconnectException(); }
 	if (sizeof(message::Write) != len) { throw ClientException(); }
 	this->client = client;
@@ -63,7 +63,7 @@ Request::Request(Client *client) throw (ClientException) {
 
 // Respond to a Request with the given code.
 void Request::respond(int32_t code) {
-	if (0 > write(client->fd, "WIN", 3)) {
+	if (0 > ::write(client->fd, "WIN", 3)) {
 		throw ClientException();
 	}
 }
