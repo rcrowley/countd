@@ -47,7 +47,7 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 }
 
 // A new Client has connected, we accept() it.
-void accept_cb(struct ev_loop *loop, ev_io *io, int revents) {
+static void accept_cb(struct ev_loop *loop, ev_io *io, int revents) {
 	client::init(loop, io, revents, connection_cb);
 }
 
