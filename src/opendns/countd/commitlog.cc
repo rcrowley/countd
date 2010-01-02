@@ -79,15 +79,10 @@ chosen:
 
 // Commit a Request.
 bool CommitLog::write(client::Request *request) {
-	if (0 > ::write(this->file.fd, &request->message, sizeof(message::Write))) {
-		perror("[commitlog] write");
-		return false;
+	if (CommitLog::filesize < this->file.len + sizeof(message::Write)) {
+		this->choose();
 	}
-	if (fsync(this->file.fd)) { // TODO Configurable, use fdatasync
-		perror("[commitlog] fsync");
-		return false;
-	}
-	return true;
+	return this->file.write(&request->message);
 }
 
 }} // namespace opendns::countd

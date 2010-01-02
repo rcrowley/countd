@@ -1,6 +1,7 @@
 #ifndef OPENDNS_COUNTD_COMMITLOG_FILE_H
 #define OPENDNS_COUNTD_COMMITLOG_FILE_H
 
+#include "../message.h"
 #include <sys/types.h>
 
 namespace opendns { namespace countd { namespace commitlog {
@@ -15,6 +16,7 @@ struct File {
 	} pathnames;
 
 	int fd;
+	off_t len;
 
 	File(size_t index = 0);
 	~File();
@@ -22,6 +24,9 @@ struct File {
 	void destroy();
 
 	bool open();
+	bool read();
+	bool write(message::Write *message);
+
 	bool fill(bool dirty);
 	bool dirty(mode_t mode);
 	bool clean();

@@ -1,4 +1,5 @@
 #include "../commitlog.h"
+#include "../message.h"
 #include "file.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -8,9 +9,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+using namespace opendns::countd;
+
 namespace opendns { namespace countd { namespace commitlog {
 
-File::File(size_t index) : fd(-1) {
+File::File(size_t index) : fd(-1), len(0) {
 	this->init(index);
 }
 
@@ -41,6 +44,21 @@ void File::destroy() {
 bool File::open() {
 	if (0 > (this->fd = ::open(this->pathnames.dirty, O_WRONLY))) {
 		perror("[commitlog] open");
+		return false;
+	}
+	return true;
+}
+
+bool File::read() { return true; }
+
+bool File::write(message::Write *message) {
+	if (0 > ::write(this->fd, message, sizeof(message::Write))) {
+		perror("[commitlog] write");
+		return false;
+	}
+	this->len += sizeof(message::Write);
+	if (fsync(this->fd)) { // TODO Configurable, use fdatasync
+		perror("[commitlog] fsync");
 		return false;
 	}
 	return true;
