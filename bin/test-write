@@ -18,7 +18,7 @@ class CountD(object):
 
 		# TODO Support more than 32-bits
 		sign = -1 if 0 > increment else 0
-		packet = struct.pack("!ll256c256c", sign, increment, *chars)
+		packet = struct.pack("<ll256c256c", increment, sign, *chars)
 
 		self.socket.send(packet)
 		return self.socket.recv(4096)
