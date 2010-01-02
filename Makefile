@@ -8,6 +8,7 @@ LDFLAGS=-L/usr/local/lib -lev
 SOURCES=\
 	src/opendns/countd/client.cc \
 	src/opendns/countd/commitlog.cc \
+	src/opendns/countd/commitlog/file.cc \
 	src/opendns/countd/message.cc \
 	src/countd-commitlog.cc \
 	src/countd-write.cc
@@ -16,12 +17,14 @@ OBJECTS=$(SOURCES:.cc=.o)
 all: $(SOURCES) $(OBJECTS)
 	$(CXX) \
 		src/opendns/countd/commitlog.o \
+		src/opendns/countd/commitlog/file.o \
 		src/opendns/countd/message.o \
 		src/countd-commitlog.o \
 		$(LDFLAGS) -o bin/countd-commitlog
 	$(CXX) \
 		src/opendns/countd/client.o \
 		src/opendns/countd/commitlog.o \
+		src/opendns/countd/commitlog/file.o \
 		src/opendns/countd/message.o \
 		src/countd-write.o \
 		$(LDFLAGS) -o bin/countd-write

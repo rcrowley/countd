@@ -12,7 +12,7 @@
 using namespace opendns::countd;
 using namespace std;
 
-static CommitLog *commitlog = 0; // FIXME Global
+static CommitLog *_commitlog = 0; // FIXME Global
 
 // Exit when we receive SIGINT.
 static void sigint_cb(struct ev_loop *loop, ev_signal *signal, int revents) {
@@ -30,7 +30,7 @@ static void connection_cb(struct ev_loop *loop, ev_io *io, int revents) {
 		client::Request request(client);
 		printf("DEBUG keyspace: %s, key: %s, increment: %lld\n",
 			request.message.keyspace, request.message.key, request.message.increment);
-		commitlog->commit(&request);
+		_commitlog->commit(&request);
 		request.respond(client::Request::SUCCESS);
 	}
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
 	// Commit log.
 	fprintf(stderr, "[countd-write] creating commit log\n");
-	commitlog = new CommitLog;
+	_commitlog = new CommitLog;
 
 	// Listen.
 	fprintf(stderr, "[countd-write] listening\n");
@@ -98,6 +98,6 @@ int main(int argc, char **argv) {
 	ev_io_start(loop, &io);
 	ev_loop(loop, 0);
 
-	delete commitlog;
+	delete _commitlog;
 	return 0;
 }

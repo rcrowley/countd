@@ -2,13 +2,10 @@
 #define OPENDNS_COUNTD_COMMITLOG_H
 
 #include "client.h"
-#include "message.h"
-#include <exception>
+#include "commitlog/file.h"
 #include <sys/types.h>
 
 namespace opendns { namespace countd {
-
-class CommitLogException : public std::exception {};
 
 struct CommitLog {
 	static const size_t FILESIZE = (64 << 20); // TODO Configurable
@@ -18,19 +15,14 @@ struct CommitLog {
 	static const size_t filesize = (FILESIZE) - ((FILESIZE) % sizeof(message::Write));
 
 	size_t files;
-	size_t file;
 
-	int fd;
+	commitlog::File file;
 
 	CommitLog();
 	virtual ~CommitLog();
 
-	static void pathname_format(char *pathname, size_t file);
-	static void pathname_lock_format(char *pathname, size_t file);
-
-	void fill(size_t file, bool unlock);
-	void choose();
-	void commit(client::Request *request);
+	bool choose();
+	bool commit(client::Request *request);
 
 };
 

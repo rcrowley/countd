@@ -1,4 +1,4 @@
-#include "opendns/countd/commitlog.h"
+#include "opendns/countd/commitlog/file.h"
 #include "opendns/countd/message.h"
 #include <fcntl.h>
 #include <stdlib.h>
@@ -17,12 +17,9 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	// Resolve the pathname to the commit log.
-	char pathname[4096]; // FIXME
-	CommitLog::pathname_format(pathname, atoi(argv[1]));
-
 	// Output a human-readable version of the commit log.
-	int fd = open(pathname, O_RDONLY);
+	commitlog::File file(atoi(argv[1]));
+	int fd = open(file.pathnames.normal, O_RDONLY);
 	if (0 > fd) { return 1; }
 	message::Write message, empty;
 	while (sizeof(message::Write) == read(fd, &message, sizeof(message::Write))) {
