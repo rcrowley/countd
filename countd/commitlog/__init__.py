@@ -52,7 +52,6 @@ class CommitLog(object):
         Start from the current position and find the next available commit log.  If
         none are available, create and fill a new one.
         """
-        # FIXME There's an infinite loop in here somewhere.
         i = ii = self.file.index
         while 1:
             i = (i + 1) % self.files
@@ -65,10 +64,10 @@ class CommitLog(object):
                 while 1:
                     try:
                         self.file = File(self.files, File.WRITE, True)
-                        self.files += 1
                         break
                     except OSError:
                         pass
+                    self.files += 1
                 break
         sys.stderr.write("[commitlog] chose commit log %010u\n" % self.file.index)
 
