@@ -104,8 +104,11 @@ class File(object):
         """
         Write the contents of the given message.Write object into the file.
         """
+        if message.Write.LENGTH != os.write(self.fd, m.buf):
+            return False
         self.len += message.Write.LENGTH
-        return message.Write.LENGTH == os.write(self.fd, m.buf)
+        os.fsync(self.fd)
+        return True
 
 if "__main__" == __name__:
     File(0, File.WRITE, True)
