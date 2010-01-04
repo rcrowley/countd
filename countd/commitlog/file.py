@@ -83,7 +83,7 @@ class File(object):
         # But for now, I'll settle for writing a file full manually and hoping it's
         # contiguous on disk.
         empty = message.Write("\0" * message.Write.LENGTH)
-        while self.len < self.filesize:
+        while not self.full():
             self.write(empty)
         os.fsync(self.fd)
         self.len = 0
