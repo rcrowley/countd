@@ -13,7 +13,7 @@ PROTOCOL
 INSTALLATION
 
 DEPENDENCIES
-	libev-3.8 <http://software.schmorp.de/pkg/libev.html>
+	Python 2.5 <http://python.org/>
 
 VERSION
 	0.1
@@ -26,7 +26,6 @@ AUTHORS
 
 SEE ALSO
 	<http://github.com/rcrowley/countd.git>
-	<http://github.com/william-os4y/fapws3/blob/master/fapws/_evwsgi.c>
 
 LICENSE
 	<http://www.freebsd.org/copyright/freebsd-license.html>
