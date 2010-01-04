@@ -1,5 +1,5 @@
 from countd import client, message, commitlog
-import select, socket
+import select, socket, sys
 
 ADDRESS = "0.0.0.0" # TODO Configurable
 PORT = 48879 # TODO Configurable
@@ -17,6 +17,7 @@ if "__main__" == __name__:
 
     epoll = select.epoll()
     epoll.register(s.fileno(), select.EPOLLIN)
+    sys.stderr.write("[countd-write] listening on %s:%d\n" % (ADDRESS, PORT))
     try:
         clients = {}
         while 1:
@@ -45,6 +46,8 @@ if "__main__" == __name__:
                 elif event & select.EPOLLHUP:
                     epoll.unregister(fileno)
                     del clients[fileno]
+    except KeyboardInterrupt:
+        sys.stderr.write("[countd-write] SIGINT\n")
     finally:
         epoll.unregister(s.fileno())
         epoll.close()
