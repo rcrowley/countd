@@ -2,7 +2,6 @@
 
 import socket
 import struct
-from time import sleep
 
 class CountD(object):
 
@@ -25,8 +24,18 @@ class CountD(object):
 
 if "__main__" == __name__:
 	countd = CountD()
+
+	# Test some successful writes
 	print(countd.write("OH HAI", "OH NOES", 47))
 	print(countd.write("asdf", "qwerty", -9))
+	from time import sleep
 	sleep(2)
 	print(countd.write("foo", "bar", 48879))
+
+	# Test a bad write
 	print(countd.socket.send("fail"))
+	print(countd.socket.recv(4096))
+
+	# Test filling a commit log
+	for i in range((64 << 20) / 520):
+		print(countd.write("OH HAI", "OH NOES", 47))
