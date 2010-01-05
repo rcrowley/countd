@@ -10,12 +10,18 @@ class CommitLog(object):
 
     FILES = 4 # TODO Configurable
 
-    def __init__(self):
+    # Flags for the CommitLog constructor.  READ will only allow access to dirty
+    # commit logs.  WRITE will only allow access to clean commit logs.
+    READ = File.READ
+    WRITE = File.WRITE
+
+    def __init__(self, flags):
         """
         Create the data directory, write all of the commit logs full and choose
         the initial commit log.
         """
         self.files = self.FILES
+        self.flags = flags
 
         # Create the data directory
         try:
@@ -52,24 +58,38 @@ class CommitLog(object):
         Start from the current position and find the next available commit log.  If
         none are available, create and fill a new one.
         """
+
+        # Loop from the current position, wrapping around the end until an available
+        # commit log is found or we're back where we started.
         i = ii = self.file.index
         while 1:
             i = (i + 1) % self.files
             try:
-                self.file = File(i, File.WRITE, False)
+                self.file = File(i, self.flags, False)
                 break
             except OSError:
                 pass
+
+            # We're back where we started.
             if i == ii:
-                while 1:
-                    try:
-                        self.file = File(self.files, File.WRITE, True)
-                        break
-                    except OSError:
-                        pass
-                    self.files += 1
-                break
+
+                # If we want write access, make a new file to get it.
+                if File.WRITE == self.flags:
+                    while 1:
+                        try:
+                            self.file = File(self.files, self.flags, True)
+                            break
+                        except OSError:
+                            pass
+                        self.files += 1
+                    break
+
+                # Otherwise, give up.
+                else:
+                    return False
+
         sys.stderr.write("[commitlog] chose commit log %010u\n" % self.file.index)
+        return True
 
     def write(self, message):
         """
@@ -80,4 +100,4 @@ class CommitLog(object):
         self.file.write(message)
 
 if "__main__" == __name__:
-    CommitLog()
+    CommitLog(File.WRITE)

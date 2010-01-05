@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from countd import commitlog, message
 from countd.commitlog.file import File
 import optfunc
 import sys

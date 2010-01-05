@@ -16,7 +16,7 @@ class File(object):
     WRITE = os.O_WRONLY
     CREAT = os.O_CREAT | os.O_EXCL
 
-    CLEAN = 0600
+    CLEAN = 0200
     DIRTY = 0400
 
     # Compute the actual filesize based on the maximum in FILESIZE and the packet
@@ -61,7 +61,7 @@ class File(object):
         if hasattr(self, "fd"):
             os.close(self.fd)
         if 0 < self.len:
-            os.chmod("%s/lock-%010u" % (self.DIRNAME, self.index), self.DIRTY)
+            self.dirty()
         try:
             os.unlink("%s/lock-%010u" % (self.DIRNAME, self.index))
         except OSError:
@@ -84,7 +84,7 @@ class File(object):
         # contiguous on disk.
         empty = message.Write("\0" * message.Write.LENGTH)
         while not self.full():
-            self.write(empty)
+            self.write(empty, False)
         os.fsync(self.fd)
         self.len = 0
 
@@ -103,17 +103,30 @@ class File(object):
             return None
         return message.Write(buf)
 
-    def write(self, m):
+    def write(self, m, fsync=True):
         """
         Write the contents of the given message.Write object into the file.
         """
         if message.Write.LENGTH != os.write(self.fd, m.buf):
             return False
         self.len += message.Write.LENGTH
-        os.fsync(self.fd)
+        if fsync:
+            os.fsync(self.fd)
         return True
 
-    # Make these iterable to make reading them easy.
+    def clean(self):
+        """
+        Mark the current file as clean.
+        """
+        os.chmod("%s/lock-%010u" % (self.DIRNAME, self.index), self.CLEAN)
+
+    def dirty(self):
+        """
+        Mark the current file as dirty.
+        """
+        os.chmod("%s/lock-%010u" % (self.DIRNAME, self.index), self.DIRTY)
+
+    # Make File objects iterable to make reading easier.
     def __iter__(self):
         return self
     def next(self):

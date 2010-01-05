@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+from countd import commitlog, message
+import optfunc
+from time import sleep
+import sys
+
+@optfunc.main
+def main():
+
+    cl = commitlog.CommitLog(commitlog.CommitLog.READ)
+
+    try:
+        while 1:
+
+            # Wait a while if there are no dirty commit logs available.
+            if not cl.choose()
+                sleep(5)
+                continue
+
+            # Resolve each message in the file into permanent storage.
+            for m in cl.file:
+                pass
+
+            # Mark this file clean so it can be written again.
+            cl.file.clean()
+
+    except KeyboardInterrupt:
+        pass
