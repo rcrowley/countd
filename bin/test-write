@@ -5,37 +5,36 @@ import struct
 
 class CountD(object):
 
-	def __init__(self, hostname="localhost", port=48879):
-		self.socket = socket.socket()
-		self.socket.connect((hostname, port))
+    def __init__(self, hostname="localhost", port=48879):
+        self.socket = socket.socket()
+        self.socket.connect((hostname, port))
 
-	def write(self, keyspace, key, increment):
-		chars = list(keyspace)
-		chars.extend("\0" * (256 - len(keyspace)))
-		chars.extend(list(key))
-		chars.extend("\0" * (256 - len(key)))
+    def write(self, keyspace, key, increment):
+        chars = list(keyspace)
+        chars.extend("\0" * (256 - len(keyspace)))
+        chars.extend(list(key))
+        chars.extend("\0" * (256 - len(key)))
 
-		# TODO Support more than 32-bits
-		sign = -1 if 0 > increment else 0
-		packet = struct.pack("<ll256c256c", increment, sign, *chars)
+        # TODO Support more than 32-bits
+        packet = struct.pack("<q256c256c", long(increment), *chars)
 
-		self.socket.send(packet)
-		return self.socket.recv(4096)
+        self.socket.send(packet)
+        return self.socket.recv(4096)
 
 if "__main__" == __name__:
-	countd = CountD()
+    countd = CountD()
 
-	# Test some successful writes
-	print(countd.write("OH HAI", "OH NOES", 47))
-	print(countd.write("asdf", "qwerty", -9))
-	from time import sleep
-	sleep(2)
-	print(countd.write("foo", "bar", 48879))
+    # Test some successful writes
+    print(countd.write("OH HAI", "OH NOES", 47))
+    print(countd.write("asdf", "qwerty", -9))
+    from time import sleep
+    sleep(2)
+    print(countd.write("foo", "bar", 48879))
 
-	# Test a bad write
-	print(countd.socket.send("fail"))
-	print(countd.socket.recv(4096))
+    # Test a bad write
+    print(countd.socket.send("fail"))
+    print(countd.socket.recv(4096))
 
-	# Test filling a commit log
-	for i in range((64 << 20) / 520):
-		print(countd.write("OH HAI", "OH NOES", 47))
+    # Test filling a commit log
+    for i in range((64 << 20) / 520):
+        print(countd.write("OH HAI", "OH NOES", 47))
