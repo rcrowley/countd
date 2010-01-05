@@ -10,7 +10,7 @@ class File(object):
     """
 
     DIRNAME = "/tmp/countd" # TODO Configurable
-    FILESIZE = 64 << 20 # TODO Configurable
+    FILESIZE = 2 << 20 # TODO Configurable
 
     READ = os.O_RDONLY
     WRITE = os.O_WRONLY
