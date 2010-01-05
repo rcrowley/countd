@@ -1,4 +1,4 @@
-from countd import message
+from countd import message, settings
 #import ctypes
 import os
 import stat
@@ -9,9 +9,6 @@ class File(object):
     A single commit log file which takes care of its own locking.
     """
 
-    DIRNAME = "/tmp/countd" # TODO Configurable
-    FILESIZE = 2 << 20 # TODO Configurable
-
     READ = os.O_RDONLY
     WRITE = os.O_WRONLY
     CREAT = os.O_CREAT | os.O_EXCL
@@ -20,8 +17,8 @@ class File(object):
     DIRTY = 0400
 
     # Compute the actual filesize based on the maximum in FILESIZE and the packet
-    # length, LENGTH.
-    filesize = FILESIZE - (FILESIZE % message.Write.LENGTH)
+    # length.
+    filesize = settings.FILESIZE - (settings.FILESIZE % message.Write.LENGTH)
 
     def __init__(self, index, flags, create=False):
         """
@@ -31,8 +28,8 @@ class File(object):
         """
         self.index = index
         self.len = 0
-        pathname1 = "%s/%010u" % (self.DIRNAME, self.index)
-        pathname2 = "%s/lock-%010u" % (self.DIRNAME, self.index)
+        pathname1 = "%s/%010u" % (settings.DIRNAME, self.index)
+        pathname2 = "%s/lock-%010u" % (settings.DIRNAME, self.index)
 
         # Try to lock the file at this index using a hardlink.
         try:
@@ -63,7 +60,7 @@ class File(object):
         if 0 < self.len:
             self.dirty()
         try:
-            os.unlink("%s/lock-%010u" % (self.DIRNAME, self.index))
+            os.unlink("%s/lock-%010u" % (settings.DIRNAME, self.index))
         except OSError:
             pass
 
@@ -118,13 +115,13 @@ class File(object):
         """
         Mark the current file as clean.
         """
-        os.chmod("%s/lock-%010u" % (self.DIRNAME, self.index), self.CLEAN)
+        os.chmod("%s/lock-%010u" % (settings.DIRNAME, self.index), self.CLEAN)
 
     def dirty(self):
         """
         Mark the current file as dirty.
         """
-        os.chmod("%s/lock-%010u" % (self.DIRNAME, self.index), self.DIRTY)
+        os.chmod("%s/lock-%010u" % (settings.DIRNAME, self.index), self.DIRTY)
 
     # Make File objects iterable to make reading easier.
     def __iter__(self):

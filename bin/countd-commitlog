@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from countd import settings
 from countd.commitlog.file import File
 import optfunc
 import sys
@@ -9,7 +10,7 @@ def main(index):
     """Usage: %prog <index>"""
 
     sys.stderr.write("[countd-commitlog] %s/%010u\n" % (
-        File.DIRNAME,
+        settings.DIRNAME,
         int(index))
     )
     file = File(int(index), File.READ)

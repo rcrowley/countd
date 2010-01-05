@@ -19,7 +19,8 @@ if "__main__" == __name__:
 
     epoll = select.epoll()
     epoll.register(s.fileno(), select.EPOLLIN)
-    sys.stderr.write("[countd-write] listening on %s:%d\n" % (ADDRESS, PORT))
+    sys.stderr.write("[countd-write] listening on %s:%d\n" % (
+		settings.ADDRESS, settings.PORT))
     try:
         clients = {}
         while 1:

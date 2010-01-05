@@ -1,3 +1,4 @@
+from countd import settings
 from countd.commitlog.file import File
 import os
 import sys
@@ -7,8 +8,6 @@ class CommitLog(object):
     The entire commit log group which takes care of rotating through logs or creating
     new ones when necessary.
     """
-
-    FILES = 4 # TODO Configurable
 
     # Flags for the CommitLog constructor.  READ will only allow access to dirty
     # commit logs.  WRITE will only allow access to clean commit logs.
@@ -20,13 +19,13 @@ class CommitLog(object):
         Create the data directory, write all of the commit logs full and choose
         the initial commit log.
         """
-        self.files = self.FILES
+        self.files = settings.FILES
         self.flags = flags
 
         # Create the data directory
         try:
-            os.mkdir(File.DIRNAME)
-        except OSError, e:
+            os.mkdir(settings.DIRNAME)
+        except OSError:
             pass
 
         # Check that the first FILES files are in good shape.
