@@ -15,25 +15,25 @@ class Write(object):
         try:
             parts = struct.unpack(self.FORMAT, self.buf)
             self._increment = parts[0]
-            self._keyspace = str(parts[1:256])
-            self._key = str(parts[257:256])
+            self._keyspace = "".join(parts[1:256]).strip("\x00") # TODO Configurable
+            self._key = "".join(parts[257:512]).strip("\x00") # TODO Configurable
         except struct.error:
             pass
 
     @property
     def increment(self):
-        if self._increment is None:
+        if not hasattr(self, "_increment"):
             self._unpack()
         return self._increment
 
     @property
     def keyspace(self):
-        if self._keyspace is None:
+        if not hasattr(self, "_keyspace"):
             self._unpack()
         return self._keyspace
 
     @property
     def key(self):
-        if self._key is None:
+        if not hasattr(self, "_key"):
             self._unpack()
         return self._key
