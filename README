@@ -2,11 +2,24 @@ NAME
 	countd
 
 SYNOPSIS
+	countd-read
+	countd-write
+	countd-worker
 
 DESCRIPTION
+	countd is a very specialized database server for storing a large number
+	of counters.  Each counter is identified by a key within a keyspace.
+	Keys within a keyspace are kept sorted in descending order by count on
+	disk to optimize the primary read pattern of reading the top N keys from
+	a keyspace.
+
+	Read-your-own-writes consistency is not guaranteed or even likely.  This
+	allows the multiprocess design.  Readers and writers may be run behind a
+	TCP load balancer.  Workers may be pooled.  The pieces are independent
+	and take care not to step on each other's toes.
 
 PROTOCOL
-	Requests are fixed-length packets containing an 8-byte counter and two
+	Writes are fixed-length packets containing an 8-byte counter and two
 	fixed-length, null-padded strings.  The first string is the keyspace and
 	the second is the key.
 
