@@ -98,7 +98,10 @@ class File(object):
         """
         Read LENGTH bytes to create and return a message.Write object.
         """
-        return message.Write(os.read(self.fd, message.Write.LENGTH))
+        buf = os.read(self.fd, message.Write.LENGTH)
+        if message.Write.LENGTH != len(buf):
+            return None
+        return message.Write(buf)
 
     def write(self, m):
         """
@@ -109,6 +112,15 @@ class File(object):
         self.len += message.Write.LENGTH
         os.fsync(self.fd)
         return True
+
+    # Make these iterable to make reading them easy.
+    def __iter__(self):
+        return self
+    def next(self):
+        m = self.read()
+        if m is None:
+            raise StopIteration()
+        return m
 
 if "__main__" == __name__:
     File(0, File.WRITE, True)
