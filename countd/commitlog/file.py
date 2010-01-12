@@ -9,6 +9,10 @@ class File(object):
     A single commit log file which takes care of its own locking.
     """
 
+    # TODO Put a timestamp in each line in the file so that when reading,
+    # we can throw out lines older than the preceding line, making the commit
+    # log safe against partially-written files.
+
     READ = os.O_RDONLY
     WRITE = os.O_WRONLY
     CREAT = os.O_CREAT | os.O_EXCL
