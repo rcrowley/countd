@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from countd import commitlog, message
+from countd import commitlog, message, permanent
 import optfunc
 from time import sleep
 import sys
@@ -14,13 +14,25 @@ def main():
         while 1:
 
             # Wait a while if there are no dirty commit logs available.
-            if not cl.choose()
+            if not cl.choose():
                 sleep(5)
                 continue
 
-            # Resolve each message in the file into permanent storage.
+            # Group updates for the same keyspace
+            keyspaces = {}
             for m in cl.file:
-                pass
+                if 0 == m.increment:
+                    continue
+                if m.keyspace not in keyspaces:
+                    keyspaces[m.keyspace] = []
+                keyspaces[m.keyspace].append((m.key, m.increment))
+
+            # Write the updates to permanent storage
+            for k, l in keyspaces.iteritems():
+                keyspace = permanent.Keyspace(k, permanent.Keyspace.WRITE)
+                for k, i in l:
+                    keyspace.update(k, i)
+                del keyspace # Force destructor to be called now
 
             # Mark this file clean so it can be written again.
             cl.file.clean()
