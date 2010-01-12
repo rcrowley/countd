@@ -6,7 +6,7 @@ class Read(object):
 
 class Write(object):
 
-    # Response codes
+    # Response codes.
     WIN = 0
     FAIL = 1
 
@@ -24,10 +24,11 @@ class Write(object):
         return self.connection.fileno()
 
     def read(self):
+        # TODO Error if we can't read everything necessary.
         return message.Write(self.connection.recv(message.Write.LENGTH))
 
     def write(self, code):
-        # TODO Response code
+        # TODO Response code.
         return 3 == self.connection.send("WIN")
 
 if "__main__" == __name__:

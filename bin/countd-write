@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 
 from countd import client, commitlog
+import optfunc
 import select, socket, sys
 
-ADDRESS = "0.0.0.0" # TODO Configurable
-PORT = 48879 # TODO Configurable
-
-if "__main__" == __name__:
+@optfunc.main
+def main(listen="0.0.0.0", port=48879):
 
     cl = commitlog.CommitLog(commitlog.CommitLog.WRITE)
 
     # Listen
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((ADDRESS, PORT))
+    s.bind((listen, port))
     s.listen(1)
     s.setblocking(0)
 
     epoll = select.epoll()
     epoll.register(s.fileno(), select.EPOLLIN)
     sys.stderr.write("[countd-write] listening on %s:%d\n" % (
-		settings.ADDRESS, settings.PORT))
+		listen, port
+	))
     try:
         clients = {}
         while 1:
