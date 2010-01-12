@@ -50,7 +50,8 @@ class CommitLog(object):
             pass
         self.file = DummyFile()
         self.file.index = self.files - 1
-        self.choose()
+        if File.WRITE == self.flags:
+            self.choose()
 
     def choose(self):
         """
