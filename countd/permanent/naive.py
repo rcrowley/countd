@@ -70,8 +70,18 @@ class Keyspace(object):
         return struct.pack(self.FORMAT, increment, *chars)
 
     def _unpack(self, buf):
-        count, key = struct.unpack(self.FORMAT, buf)
-        return key, count
+        parts = struct.unpack(self.FORMAT, buf)
+        return "".join(parts[1:settings.KEY]).strip("\x00"), parts[0]
+
+    # Make Keyspace objects iterable to make reading easier.
+    def __iter__(self):
+        os.lseek(self.fd, 0, os.SEEK_SET)
+        return self
+    def next(self):
+        buf = os.read(self.fd, self.LENGTH)
+        if self.LENGTH != len(buf):
+            raise StopIteration()
+        return self._unpack(buf)
 
 class Index(object):
     """
