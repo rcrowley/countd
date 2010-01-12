@@ -11,8 +11,8 @@ def main(index):
 
     sys.stderr.write("[countd-commitlog] %s/%010u\n" % (
         settings.DIRNAME,
-        int(index))
-    )
+        int(index)
+    ))
     file = File(int(index), File.READ)
     for m in file:
         print("%-34s %-34s %10d" % (m.keyspace, m.key, m.increment))
