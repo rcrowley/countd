@@ -15,6 +15,8 @@ def main():
 
             # Wait a while if there are no dirty commit logs available.
             if not cl.choose():
+                sys.stderr.write(
+                    "[countd-commitlog] waiting for commit logs\n")
                 sleep(5)
                 continue
 
@@ -36,6 +38,7 @@ def main():
 
             # Mark this file clean so it can be written again.
             cl.file.clean()
+            sys.stderr.write("[countd-commitlog] cleaned\n")
 
     except KeyboardInterrupt:
         pass
