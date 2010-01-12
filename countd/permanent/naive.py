@@ -21,7 +21,8 @@ class Keyspace(object):
             os.mkdir("%s/%s" % (settings.DIRNAME, keyspace), 0700)
         except OSError:
             pass
-        self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace), flags, 0600)
+        self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace),
+            flags, 0600)
         self.index = Index(keyspace)
         self.deltas = Deltas(keyspace)
 
@@ -31,8 +32,8 @@ class Keyspace(object):
 
     def range(self, offset, length):
         """
-        Yields keys and counts from the keyspace starting at offset and continuing
-        until length keys and counts have been returned.
+        Yields keys and counts from the keyspace starting at offset and
+        continuing until length keys and counts have been returned.
         """
         # TODO This is a generator.
         pass
@@ -41,14 +42,16 @@ class Keyspace(object):
         """
         Increment key's count and resort the keyspace on disk.
         """
-        # FIXME Use os.fcntl to lock regions of the file, otherwise this is dangerous.
+        # FIXME Use os.fcntl to lock regions of the file, otherwise this
+        # is dangerous.
 
         # Update a key that's already present.
         offset = self.index.find(key)
         if offset is not None:
             return True
 
-        # Place a new key whose count falls somewhere in the middle of the file.
+        # Place a new key whose count falls somewhere in the middle of the
+        # file.
         offset = self.deltas.find(increment)
         if offset is not None:
             return True
@@ -113,12 +116,14 @@ class Deltas(object):
 
     def find(self, count):
         """
-        Return the offset at which the last key with the given count can be found.
+        Return the offset at which the last key with the given count can
+        be found.
         """
         return None
 
     def update(self, count, offset):
         """
-        Record the offset at which the last key with the given count can be found.
+        Record the offset at which the last key with the given count can
+        be found.
         """
         pass

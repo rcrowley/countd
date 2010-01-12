@@ -18,15 +18,16 @@ class File(object):
     CLEAN = 0200
     DIRTY = 0400
 
-    # Compute the actual filesize based on the maximum in FILESIZE and the packet
-    # length.
+    # Compute the actual filesize based on the maximum in FILESIZE and the
+    # packet length.
     filesize = settings.FILESIZE - (settings.FILESIZE % message.Write.LENGTH)
 
     def __init__(self, index, flags, create=False):
         """
-        Open the file at the given index with the given flags (usually File.READ or
-        File.WRITE as defined above).  This uses hardlinks to lock open files.  If
-        the file doesn't exist, it will be created and written full.
+        Open the file at the given index with the given flags (usually
+        File.READ or File.WRITE as defined above).  This uses hardlinks to
+        lock open files.  If the file doesn't exist, it will be created and
+        written full.
         """
         self.index = index
         self.len = 0
@@ -38,8 +39,8 @@ class File(object):
             os.link(pathname1, pathname2)
             self.fd = os.open(pathname2, flags)
 
-        # If it can't be done and the file exists, throw the error.  Otherwise,
-        # create and preallocate the file.
+        # If it can't be done and the file exists, throw the error.
+        # Otherwise, create and preallocate the file.
         except OSError, e:
             if not create:
                 raise e
@@ -55,7 +56,8 @@ class File(object):
 
     def __del__(self):
         """
-        Close and unlock the file.  If anything was written into it, mark it dirty.
+        Close and unlock the file.  If anything was written into it, mark
+        it dirty.
         """
         if hasattr(self, "fd"):
             os.close(self.fd)
@@ -68,19 +70,21 @@ class File(object):
 
     def fill(self):
         """
-        Write the current file full and sync it to disk.  The goal here is a contiguous
-        area on disk for this file.
+        Write the current file full and sync it to disk.  The goal here is
+        a contiguous area on disk for this file.
         """
-        sys.stderr.write("[commitlog] filling commit log %010u\n" % self.index)
+        sys.stderr.write("[commitlog] filling commit log %010u\n" % (
+            self.index,
+        ))
 
-        # Preferred version would use syscall(2) to call fallocate(2) or directly
-        # call posix_fallocate(3).
+        # Preferred version would use syscall(2) to call fallocate(2) or
+        # directly call posix_fallocate(3).
         #libc = ctypes.CDLL("libc.so.6")
         #libc.syscall(285, self,fd, self.WRITE, 0, self.filesize)
         #libc.posix_fallocate(self.fd, 0, self.filesize)
 
-        # But for now, I'll settle for writing a file full manually and hoping it's
-        # contiguous on disk.
+        # But for now, I'll settle for writing a file full manually and
+        # hoping it's contiguous on disk.
         empty = message.Write("\0" * message.Write.LENGTH)
         while not self.full():
             self.write(empty, False)

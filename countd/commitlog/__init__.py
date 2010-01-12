@@ -4,19 +4,19 @@ import os, sys
 
 class CommitLog(object):
     """
-    The entire commit log group which takes care of rotating through logs or creating
-    new ones when necessary.
+    The entire commit log group which takes care of rotating through logs or
+    creating new ones when necessary.
     """
 
-    # Flags for the CommitLog constructor.  READ will only allow access to dirty
-    # commit logs.  WRITE will only allow access to clean commit logs.
+    # Flags for the CommitLog constructor.  READ will only allow access to
+    # dirty commit logs.  WRITE will only allow access to clean commit logs.
     READ = File.READ
     WRITE = File.WRITE
 
     def __init__(self, flags):
         """
-        Create the data directory, write all of the commit logs full and choose
-        the initial commit log.
+        Create the data directory, write all of the commit logs full and
+        choose the initial commit log.
         """
         self.files = settings.FILES
         self.flags = flags
@@ -43,8 +43,8 @@ class CommitLog(object):
             except OSError:
                 break
 
-        # Act like the current file is the last one so the first rotation comes
-        # back to the first available file.
+        # Act like the current file is the last one so the first rotation
+        # comes back to the first available file.
         class DummyFile(object):
             pass
         self.file = DummyFile()
@@ -54,12 +54,12 @@ class CommitLog(object):
 
     def choose(self):
         """
-        Start from the current position and find the next available commit log.  If
-        none are available, create and fill a new one.
+        Start from the current position and find the next available commit
+        log.  If none are available, create and fill a new one.
         """
 
-        # Loop from the current position, wrapping around the end until an available
-        # commit log is found or we're back where we started.
+        # Loop from the current position, wrapping around the end until an
+        # available commit log is found or we're back where we started.
         i = ii = self.file.index
         while 1:
             i = (i + 1) % self.files
@@ -87,12 +87,15 @@ class CommitLog(object):
                 else:
                     return False
 
-        sys.stderr.write("[commitlog] chose commit log %010u\n" % self.file.index)
+        sys.stderr.write("[commitlog] chose commit log %010u\n" % (
+            self.file.index,
+        ))
         return True
 
     def write(self, message):
         """
-        Write the contents of the given message.Write object into the current file.
+        Write the contents of the given message.Write object into the
+        current file.
         """
         if self.file.full():
             self.choose()
