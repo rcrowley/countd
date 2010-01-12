@@ -1,8 +1,6 @@
 from countd import message, settings
 #import ctypes
-import os
-import stat
-import sys
+import os, stat, sys
 
 class File(object):
     """

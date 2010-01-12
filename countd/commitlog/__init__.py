@@ -1,7 +1,6 @@
 from countd import settings
 from countd.commitlog.file import File
-import os
-import sys
+import os, sys
 
 class CommitLog(object):
     """
