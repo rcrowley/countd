@@ -14,9 +14,7 @@ class Write(object):
         self.connection = connection
         self.connection.setblocking(0)
         self.address = address
-        sys.stderr.write("[client] new connection from %s:%d\n" % (
-            self.address,
-        ))
+        sys.stderr.write("[client] new connection from %s:%d\n" % self.address)
 
     def __del__(self):
         self.connection.close()
