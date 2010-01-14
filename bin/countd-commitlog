@@ -15,4 +15,6 @@ def main(index):
     ))
     file = File(int(index), File.READ)
     for m in file:
+        if 0 == m.increment:
+            continue
         print("%-34s %-34s %10d" % (m.keyspace, m.key, m.increment))
