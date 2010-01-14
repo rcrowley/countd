@@ -136,6 +136,10 @@ class Deltas(object):
         self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace),
             os.O_RDONLY)
 
+    def __del__(self):
+        if hasattr(self, "fd"):
+            os.close(self.fd)
+
     def _unpack(self, buf):
         return struct.unpack(Keyspace.FORMAT, buf)[0]
 
