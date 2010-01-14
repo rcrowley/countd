@@ -24,11 +24,11 @@ if "__main__" == __name__:
     countd = CountD()
 
     # Test some successful writes
-    print(countd.write("OH HAI", "OH NOES", 47))
-    print(countd.write("asdf", "qwerty", -9))
-    from time import sleep
-    sleep(2)
-    print(countd.write("foo", "bar", 48879))
+#    print(countd.write("OH HAI", "OH NOES", 47))
+#    print(countd.write("asdf", "qwerty", -9))
+#    from time import sleep
+#    sleep(2)
+#    print(countd.write("foo", "bar", 48879))
 
     # Test a bad write.
 	#   FIXME This bad write causes all writes that follow to be
@@ -38,5 +38,15 @@ if "__main__" == __name__:
 #    print(countd.socket.recv(4096))
 
     # Test filling a commit log
-    for i in range((64 << 20) / 520):
-        print(countd.write("hooah", "hooah", 47))
+#    for i in range((64 << 20) / 520):
+#        print(countd.write("hooah", "hooah", 47))
+
+    print(countd.write("hooah", "asdf", 47))
+    print(countd.write("hooah", "qwerty", -9))
+    print(countd.write("hooah", "foo", 12))
+    print(countd.write("hooah", "bar", 4))
+    print(countd.write("hooah", "baz", 82))
+    print(countd.write("hooah", "bang", 82))
+    print(countd.write("hooah", "pants", 25))
+    print(countd.write("hooah", "foo", 1000))
+    print(countd.write("hooah", "bang", 1000))
