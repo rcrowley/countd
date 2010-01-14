@@ -54,10 +54,15 @@ class Keyspace(object):
         try:
 
             # Update a key that's already present.
+            #   TODO Replace most of this block with a call to self.range
             offset = self.index.find(key)
             if offset is not None:
-                # TODO
-                return self._update(key, increment)
+                os.lseek(self.fd, offset, os.SEEK_SET)
+                buf = os.read(self.fd, self.LENGTH)
+                if self.LENGTH != len(buf):
+                    return False
+                count = self._unpack(buf)[1]
+                return self._update(key, count + increment, 0, offset)
 
             # Place a new key.
             if not self._update(key, increment):
@@ -70,20 +75,25 @@ class Keyspace(object):
         except OSError:
             return False
 
-    def _update(self, key, count, offset=0):
+    def _update(self, key, count, offset=0, empty_offset=None):
         # FIXME Use os.fcntl to lock regions of the file, otherwise this
         # is dangerous to do in multiple processes.
-
-        # Place a new whose count falls somewhere in the middle of the file.
         offset = self.deltas.find(count, offset)
-        if offset is not None:
+
+        # Place a key whose count falls somewhere in the middle of the file.
+        #   TODO Replace most of this block with a call to self.range
+        if offset != empty_offset and offset is not None:
             os.lseek(self.fd, offset, os.SEEK_SET)
             buf = os.read(self.fd, self.LENGTH)
             if self.LENGTH != len(buf):
                 return False
-            key2, count2 = self._unpack(buf)
-            if not self._update(key2, count2, offset + self.LENGTH):
+            k, c = self._unpack(buf)
+            if not self._update(k, c, offset + self.LENGTH, empty_offset):
                 return False
+            os.lseek(self.fd, offset, os.SEEK_SET)
+
+        # Place a key whose count falls in an empty slot.
+        elif offset == empty_offset and offset is not None:
             os.lseek(self.fd, offset, os.SEEK_SET)
 
         # Place a key whose count falls at the end of the file.
@@ -112,19 +122,40 @@ class Index(object):
     """
 
     def __init__(self, keyspace):
-        self.pathname = "%s/%s/index" % (settings.DIRNAME, keyspace)
+        self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace),
+            os.O_RDONLY)
+
+    def __del__(self):
+        if hasattr(self, "fd"):
+            os.close(self.fd)
+
+    def _unpack(self, buf):
+        return "".join(struct.unpack(Keyspace.FORMAT,
+            buf)[1:settings.KEY]).strip("\x00")
 
     def find(self, key):
         """
         Return the offset at which the key can be found.
         """
-        return None
+        for k in self:
+            if k == key:
+                return os.lseek(self.fd, 0, os.SEEK_CUR) - Keyspace.LENGTH
 
     def update(self, key, offset):
         """
         Record the offset at which the key can be found.
         """
         pass
+
+    # Make Index objects iterable to make reading easier.
+    def __iter__(self):
+        os.lseek(self.fd, 0, os.SEEK_SET)
+        return self
+    def next(self):
+        buf = os.read(self.fd, Keyspace.LENGTH)
+        if Keyspace.LENGTH != len(buf):
+            raise StopIteration()
+        return self._unpack(buf)
 
 class Deltas(object):
     """
