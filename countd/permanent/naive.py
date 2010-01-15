@@ -45,8 +45,12 @@ class Keyspace(object):
         Yields keys and counts from the keyspace starting at offset and
         continuing until length keys and counts have been returned.
         """
-        # TODO This is a generator.
-        pass
+        os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
+        for i in range(length):
+            buf = os.read(self.fd, self.LENGTH)
+            if self.LENGTH != len(buf):
+                break
+            yield self._unpack(buf)
 
     def update(self, key, increment, fsync=True):
         """
@@ -55,14 +59,12 @@ class Keyspace(object):
         try:
 
             # Update a key that's already present.
-            #   TODO Replace most of this block with a call to self.range
             offset = self.index.find(key)
             if offset is not None:
-                os.lseek(self.fd, offset, os.SEEK_SET)
-                buf = os.read(self.fd, self.LENGTH)
-                if self.LENGTH != len(buf):
+                r = self.range(offset, 1)
+                if r is None:
                     return False
-                count = self._unpack(buf)[1]
+                count = r.next()[1]
                 return self._update(key, count + increment, 0, offset)
 
             # Place a new key.
@@ -82,24 +84,22 @@ class Keyspace(object):
         offset = self.deltas.find(count, offset)
 
         # Place a key whose count falls somewhere in the middle of the file.
-        #   TODO Replace most of this block with a call to self.range
         if offset != empty_offset and offset is not None:
-            os.lseek(self.fd, offset, os.SEEK_SET)
-            buf = os.read(self.fd, self.LENGTH)
-            if self.LENGTH != len(buf):
+            r = self.range(offset, 1)
+            if r is None:
                 return False
-            k, c = self._unpack(buf)
+            k, c = r.next()
             if not self._update(k, c, offset + self.LENGTH, empty_offset):
                 return False
-            os.lseek(self.fd, offset, os.SEEK_SET)
+            os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
 
         # Place a key whose count falls in an empty slot.
         elif offset == empty_offset and offset is not None:
-            os.lseek(self.fd, offset, os.SEEK_SET)
+            os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
 
         # Place a key whose count falls at the end of the file.
         else:
-            offset = os.lseek(self.fd, 0, os.SEEK_END)
+            offset = os.lseek(self.fd, 0, os.SEEK_END) / self.LENGTH
 
         if self.LENGTH != os.write(self.fd, self._pack(key, count)):
             return False
@@ -141,7 +141,7 @@ class Index(object):
         """
         for k in self:
             if k == key:
-                return os.lseek(self.fd, 0, os.SEEK_CUR) - Keyspace.LENGTH
+                return os.lseek(self.fd, 0, os.SEEK_CUR) / Keyspace.LENGTH - 1
 
     def update(self, key, offset):
         """
@@ -184,7 +184,7 @@ class Deltas(object):
         """
         for c in self.iter(offset):
             if c < count:
-                return os.lseek(self.fd, 0, os.SEEK_CUR) - Keyspace.LENGTH
+                return os.lseek(self.fd, 0, os.SEEK_CUR) / Keyspace.LENGTH - 1
 
     def update(self, count, offset):
         """
@@ -197,7 +197,7 @@ class Deltas(object):
     def __iter__(self):
         return self.iter(0)
     def iter(self, offset):
-        os.lseek(self.fd, offset, os.SEEK_SET)
+        os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
         return self
     def next(self):
         buf = os.read(self.fd, Keyspace.LENGTH)
