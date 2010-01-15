@@ -11,18 +11,19 @@ class Keyspace(object):
     """
 
     LENGTH = settings.COUNT + settings.KEY
-    FORMAT = "<q%dc" % settings.KEYSPACE
+    FORMAT = "<q{0}c".format(settings.KEYSPACE)
 
     READ = os.O_RDONLY
     WRITE = os.O_RDWR | os.O_CREAT
 
     def __init__(self, keyspace, flags):
         try:
-            os.mkdir("%s/%s" % (settings.DIRNAME, keyspace), 0700)
+            os.mkdir("{0}/{1}".format(settings.DIRNAME, keyspace), 0o700)
         except OSError:
             pass
-        self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace),
-            flags, 0600)
+        self.fd = os.open("{0}/{1}/keyspace".format(
+            settings.DIRNAME, keyspace
+        ), flags, 0o600)
         self.index = Index(keyspace)
         self.deltas = Deltas(keyspace)
 
@@ -122,8 +123,9 @@ class Index(object):
     """
 
     def __init__(self, keyspace):
-        self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace),
-            os.O_RDONLY)
+        self.fd = os.open("{0}/{1}/keyspace".format(
+            settings.DIRNAME, keyspace
+        ), os.O_RDONLY)
 
     def __del__(self):
         if hasattr(self, "fd"):
@@ -164,8 +166,9 @@ class Deltas(object):
     """
 
     def __init__(self, keyspace):
-        self.fd = os.open("%s/%s/keyspace" % (settings.DIRNAME, keyspace),
-            os.O_RDONLY)
+        self.fd = os.open("{0}/{1}/keyspace".format(
+            settings.DIRNAME, keyspace
+        ), os.O_RDONLY)
 
     def __del__(self):
         if hasattr(self, "fd"):

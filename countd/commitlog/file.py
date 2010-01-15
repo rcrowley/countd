@@ -15,8 +15,8 @@ class File(object):
     WRITE = os.O_WRONLY
     CREAT = os.O_CREAT | os.O_EXCL
 
-    CLEAN = 0200
-    DIRTY = 0400
+    CLEAN = 0o200
+    DIRTY = 0o400
 
     # Compute the actual filesize based on the maximum in FILESIZE and the
     # packet length.
@@ -31,8 +31,8 @@ class File(object):
         """
         self.index = index
         self.len = 0
-        pathname1 = "%s/%010u" % (settings.DIRNAME, self.index)
-        pathname2 = "%s/lock-%010u" % (settings.DIRNAME, self.index)
+        pathname1 = "{0}/{1:010}".format(settings.DIRNAME, self.index)
+        pathname2 = "{0}/lock-{1:010}".format(settings.DIRNAME, self.index)
 
         # Try to lock the file at this index using a hardlink.
         try:
@@ -41,6 +41,8 @@ class File(object):
 
         # If it can't be done and the file exists, throw the error.
         # Otherwise, create and preallocate the file.
+        #   FIXME This is the single block of code that's not correct
+        #   Python 3.
         except OSError, e:
             if not create:
                 raise e
@@ -64,7 +66,7 @@ class File(object):
         if 0 < self.len:
             self.dirty()
         try:
-            os.unlink("%s/lock-%010u" % (settings.DIRNAME, self.index))
+            os.unlink("{0}/lock-{1:010}".format(settings.DIRNAME, self.index))
         except OSError:
             pass
 
@@ -73,8 +75,8 @@ class File(object):
         Write the current file full and sync it to disk.  The goal here is
         a contiguous area on disk for this file.
         """
-        sys.stderr.write("[commitlog] filling commit log %010u\n" % (
-            self.index,
+        sys.stderr.write("[commitlog] filling commit log {0:010}\n".format(
+            self.index
         ))
 
         # Preferred version would use syscall(2) to call fallocate(2) or
@@ -121,13 +123,15 @@ class File(object):
         """
         Mark the current file as clean.
         """
-        os.chmod("%s/lock-%010u" % (settings.DIRNAME, self.index), self.CLEAN)
+        os.chmod("{0}/lock-{1:010}".format(settings.DIRNAME, self.index),
+            self.CLEAN)
 
     def dirty(self):
         """
         Mark the current file as dirty.
         """
-        os.chmod("%s/lock-%010u" % (settings.DIRNAME, self.index), self.DIRTY)
+        os.chmod("{0}/lock-{1:010}".format(settings.DIRNAME, self.index),
+            self.DIRTY)
 
     # Make File objects iterable to make reading easier.
     def __iter__(self):

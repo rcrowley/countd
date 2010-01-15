@@ -7,7 +7,7 @@ class Read(object):
 class Write(object):
 
     LENGTH = settings.INCREMENT + settings.KEYSPACE + settings.KEY
-    FORMAT = "<q%dc%dc" % (settings.KEYSPACE, settings.KEY)
+    FORMAT = "<q{0}c{1}c".format(settings.KEYSPACE, settings.KEY)
 
     def __init__(self, buf):
         self.buf = buf

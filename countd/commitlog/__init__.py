@@ -87,8 +87,8 @@ class CommitLog(object):
                 else:
                     return False
 
-        sys.stderr.write("[commitlog] chose commit log %010u\n" % (
-            self.file.index,
+        sys.stderr.write("[commitlog] chose commit log {0:010}\n".format(
+            self.file.index
         ))
         return True
 
