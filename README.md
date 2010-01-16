@@ -41,7 +41,7 @@ Please report bugs to <https://github.com/rcrowley/countd/issues>.
 
 ## SECURITY CONSIDERATIONS
 
-countd(1) doesn't encrypt or protect anything.  Use it behind a firewall or listen on 127.0.0.1.
+countd doesn't encrypt or protect anything.  Use it behind a firewall or listen on 127.0.0.1.
 
 ## AUTHOR
 
