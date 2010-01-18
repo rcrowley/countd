@@ -3,7 +3,7 @@ A naive implementation of the permanent storage interface.
 """
 
 from countd import settings
-import os, struct, sys
+import fcntl, os, struct, sys
 
 class Keyspace(object):
     """
@@ -26,6 +26,7 @@ class Keyspace(object):
         ), flags, 0o600)
         self.index = Index(keyspace)
         self.deltas = Deltas(keyspace)
+        self.locks = []
 
     def __del__(self):
         if hasattr(self, "fd"):
@@ -40,17 +41,28 @@ class Keyspace(object):
         parts = struct.unpack(self.FORMAT, buf)
         return "".join(parts[1:settings.KEY]).strip("\x00"), parts[0]
 
-    def range(self, offset, length):
+    def range(self, offset, length, mode=None):
         """
         Yields keys and counts from the keyspace starting at offset and
         continuing until length keys and counts have been returned.
+
+        By default, the range is locked in shared mode and unlocked when all
+        rows have been read.  If a locking mode is provided in the third
+        argument, the caller becomes responsible for unlocking this range.
         """
         os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
+        if mode is None:
+            self.lock(offset, length, fcntl.LOCK_SH)
+        else:
+            self.lock(offset, length, mode)
+            self.locks.append((offset, length))
         for i in range(length):
             buf = os.read(self.fd, self.LENGTH)
             if self.LENGTH != len(buf):
                 break
             yield self._unpack(buf)
+        if mode is None:
+            self.lock(offset, length, fcntl.LOCK_UN)
 
     def update(self, key, increment, fsync=True):
         """
@@ -61,17 +73,20 @@ class Keyspace(object):
             # Update a key that's already present.
             offset = self.index.find(key)
             if offset is not None:
-                r = self.range(offset, 1)
+                r = self.range(offset, 1, fcntl.LOCK_EX)
                 if r is None:
+                    self.unlock()
                     return False
                 count = r.next()[1]
-                if not self._update(key, count + increment, 0, offset)
+                if not self._update(key, count + increment, 0, offset):
+                    self.unlock()
                     return False
 
             # Place a new key.
             elif not self._update(key, increment):
                 return False
 
+            self.unlock()
             if fsync:
                 os.fsync(self.fd)
             return True
@@ -80,13 +95,11 @@ class Keyspace(object):
             return False
 
     def _update(self, key, count, offset=0, empty_offset=None):
-        # FIXME Use os.fcntl to lock regions of the file, otherwise this
-        # is dangerous to do in multiple processes.
         offset = self.deltas.find(count, offset)
 
         # Place a key whose count falls somewhere in the middle of the file.
         if offset != empty_offset and offset is not None:
-            r = self.range(offset, 1)
+            r = self.range(offset, 1, fcntl.LOCK_EX)
             if r is None:
                 return False
             k, c = r.next()
@@ -94,18 +107,37 @@ class Keyspace(object):
                 return False
             os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
 
-        # Place a key whose count falls in an empty slot.
+        # Place a key whose count falls in an empty slot.  Note that this
+        # slot is already locked.
         elif offset == empty_offset and offset is not None:
             os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
 
         # Place a key whose count falls at the end of the file.
         else:
             offset = os.lseek(self.fd, 0, os.SEEK_END) / self.LENGTH
+            self.lock(offset, 1, fcntl.LOCK_EX)
 
         if self.LENGTH != os.write(self.fd, self._pack(key, count)):
             return False
         self.deltas.update(count, offset + self.LENGTH)
         return True
+
+    def lock(self, offset, length, mode):
+        """
+        Lock the given range with the given mode.
+        """
+        fcntl.lockf(self.fd, mode, self.LENGTH * length, self.LENGTH * offset)
+        if fcntl.LOCK_UN != mode:
+            self.locks.append((length, offset))
+
+    def unlock(self):
+        """
+        Unlock locked ranges in this file.
+        """
+        for length, offset in self.locks:
+            fcntl.lockf(self.fd, fcntl.LOCK_UN, self.LENGTH * length,
+                self.LENGTH * offset)
+        self.locks = []
 
     # Make Keyspace objects iterable to make reading easier.
     def __iter__(self):
@@ -198,7 +230,7 @@ class Deltas(object):
     def __iter__(self):
         return self.iter(0)
     def iter(self, offset):
-        os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
+        os.lseek(self.fd, Keyspace.LENGTH * offset, os.SEEK_SET)
         return self
     def next(self):
         buf = os.read(self.fd, Keyspace.LENGTH)
