@@ -65,10 +65,11 @@ class Keyspace(object):
                 if r is None:
                     return False
                 count = r.next()[1]
-                return self._update(key, count + increment, 0, offset)
+                if not self._update(key, count + increment, 0, offset)
+                    return False
 
             # Place a new key.
-            if not self._update(key, increment):
+            elif not self._update(key, increment):
                 return False
 
             if fsync:
