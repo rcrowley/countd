@@ -14,5 +14,13 @@ def main(keyspace):
         keyspace
     ))
     keyspace = permanent.Keyspace(keyspace, permanent.Keyspace.READ)
-    for key, count in keyspace:
-        print("%-69s %10d" % (key, count))
+    offset, length = 0, 0
+    while 1:
+        r = keyspace.range(offset, 200)
+        for key, count in r:
+            print("%-69s %10d" % (key, count))
+            length += 1
+        if 200 != length:
+            break
+        offset += length
+        length = 0
