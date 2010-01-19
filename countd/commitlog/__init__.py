@@ -75,12 +75,12 @@ class CommitLog(object):
                 # If we want write access, make a new file to get it.
                 if File.WRITE == self.flags:
                     while 1:
+                        self.files += 1
                         try:
-                            self.file = File(self.files, self.flags, True)
+                            self.file = File(self.files - 1, self.flags, True)
                             break
                         except OSError:
                             pass
-                        self.files += 1
                     break
 
                 # Otherwise, give up.
