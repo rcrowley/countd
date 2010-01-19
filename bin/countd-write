@@ -12,14 +12,14 @@ def main(listen="0.0.0.0", port=48879):
     # Listen
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((listen, port))
+    s.bind((listen, int(port)))
     s.listen(1)
     s.setblocking(0)
 
     epoll = select.epoll()
     epoll.register(s.fileno(), select.EPOLLIN)
     sys.stderr.write("[countd-write] listening on %s:%d\n" % (
-		listen, port
+		listen, int(port)
 	))
     try:
         clients = {}
