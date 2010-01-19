@@ -34,27 +34,29 @@ class File(object):
         pathname1 = "{0}/{1:010}".format(settings.DIRNAME, self.index)
         pathname2 = "{0}/lock-{1:010}".format(settings.DIRNAME, self.index)
 
-        # Try to lock the file at this index using a hardlink.
+        # Try to lock the commit log at this index using a hardlink.
         try:
             os.link(pathname1, pathname2)
-            self.fd = os.open(pathname2, flags)
 
-        # If it can't be done and the file exists, throw the error.
-        # Otherwise, create and preallocate the file.
-        #   FIXME This is the single block of code that's not correct
-        #   Python 3.
+        # Couldn't lock the commit log so try to create it.  If it can't be
+        # created, os.open will raise and OSError and the calling code must
+        # skip this commit log for now.
+        #   FIXME This is not Python3-friendly.
         except OSError, e:
             if not create:
-                raise e
-            try:
-                s = os.stat(pathname1)
-            except OSError:
-                s = None
-            if s is not None:
                 raise e
             self.fd = os.open(pathname2, flags | self.CREAT, self.CLEAN)
             self.fill()
             os.link(pathname2, pathname1)
+            return
+
+        # Try to open the commit log.  If there is a permissions mismatch,
+        # unlock the file and re-raise the OSError.
+        try:
+            self.fd = os.open(pathname2, flags)
+        except OSError, e:
+            os.unlink("{0}/lock-{1:010}".format(settings.DIRNAME, self.index))
+            raise e
 
     def __del__(self):
         """
