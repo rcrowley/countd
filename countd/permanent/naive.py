@@ -119,6 +119,7 @@ class Keyspace(object):
 
         if self.LENGTH != os.write(self.fd, self._pack(key, count)):
             return False
+        self.index.update(key, offset)
         self.deltas.update(count, offset + self.LENGTH)
         return True
 
