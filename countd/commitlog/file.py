@@ -67,10 +67,8 @@ class File(object):
             os.close(self.fd)
         if 0 < self.len:
             self.dirty()
-        try:
+        if hasattr(self, "fd"):
             os.unlink("{0}/lock-{1:010}".format(settings.DIRNAME, self.index))
-        except OSError:
-            pass
 
     def fill(self):
         """
