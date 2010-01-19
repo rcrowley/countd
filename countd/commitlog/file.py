@@ -92,6 +92,7 @@ class File(object):
             self.write(empty, False)
         os.fsync(self.fd)
         self.len = 0
+        os.lseek(self.fd, 0, os.SEEK_SET)
 
     def full(self):
         """
