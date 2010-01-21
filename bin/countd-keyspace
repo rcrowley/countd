@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-from countd import settings
-from countd import permanent
+from countd import permanent, settings
 import optfunc
 import sys
 
@@ -9,7 +8,7 @@ import sys
 def main(keyspace):
     """Usage: %prog <keyspace>"""
 
-    sys.stderr.write("[countd-keyspace] %s/%s/keyspace\n" % (
+    sys.stderr.write("[countd-keyspace] {0}/{1}/keyspace\n".format(
         settings.DIRNAME,
         keyspace
     ))
@@ -18,7 +17,7 @@ def main(keyspace):
     while 1:
         r = keyspace.range(offset, 200)
         for key, count in r:
-            print("%-69s %10d" % (key, count))
+            print("{0:69} {1:>10}".format(key, count))
             length += 1
         if 200 != length:
             break

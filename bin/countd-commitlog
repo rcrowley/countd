@@ -9,7 +9,7 @@ import sys
 def main(index):
     """Usage: %prog <index>"""
 
-    sys.stderr.write("[countd-commitlog] %s/%010u\n" % (
+    sys.stderr.write("[countd-commitlog] {0}/{1:010}\n".format(
         settings.DIRNAME,
         int(index)
     ))
@@ -17,4 +17,4 @@ def main(index):
     for m in file:
         if 0 == m.increment:
             continue
-        print("%-34s %-34s %10d" % (m.keyspace, m.key, m.increment))
+        print("{0:34} {1:34} {2:>10}".format(m.keyspace, m.key, m.increment))

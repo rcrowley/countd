@@ -18,7 +18,7 @@ def main(listen="0.0.0.0", port=48879):
 
     epoll = select.epoll()
     epoll.register(s.fileno(), select.EPOLLIN)
-    sys.stderr.write("[countd-write] listening on %s:%d\n" % (
+    sys.stderr.write("[countd-write] listening on {0}:{1}\n".format(
 		listen, int(port)
 	))
     try:
