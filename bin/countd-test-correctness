@@ -25,7 +25,7 @@ def main(keyspaces=10, keys=1000, hostname="localhost", port=48879):
     # value will be the key itself.  Randomize the order of these triples.
     data = []
     for keyspace in range(int(keyspaces)):
-		keyspace = "keyspace-{0:010}".format(keyspace)
+        keyspace = "keyspace-{0:010}".format(keyspace)
         for key in range(int(keys)):
             ii = key
             while 0 < ii:
