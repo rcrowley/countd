@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from countd import message, settings
+import optfunc
+import random, socket, struct, sys
+
+class CountD(object):
+
+    def __init__(self, hostname="localhost", port=48879):
+        self.socket = socket.socket()
+        self.socket.connect((hostname, port))
+
+    def write(self, keyspace, key, increment):
+        self.socket.send(str(message.Write(
+            keyspace=keyspace,
+            key=key,
+            increment=increment
+        )))
+        return self.socket.recv(4096)
+
+@optfunc.main
+def main(keyspaces=10, keys=1000, hostname="localhost", port=48879):
+
+    # Create (keyspace, key, increment) triples such that each key's ending
+    # value will be the key itself.  Randomize the order of these triples.
+    data = []
+    for keyspace in range(int(keyspaces)):
+		keyspace = "keyspace-{0:010}".format(keyspace)
+        for key in range(int(keys)):
+            ii = key
+            while 0 < ii:
+                i = random.randint(1, ii)
+                ii -= i
+                data.append((str(keyspace), str(key), i))
+    random.shuffle(data)
+
+    # Send them all into countd.
+    c = CountD()
+    for d in data:
+        c.write(*d)
+
+    # TODO Verify for every key in every keyspace that key == count.

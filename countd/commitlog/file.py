@@ -112,7 +112,7 @@ class File(object):
         """
         Write the contents of the given message.Write object into the file.
         """
-        if message.Write.LENGTH != os.write(self.fd, m.buf):
+        if message.Write.LENGTH != os.write(self.fd, str(m)):
             return False
         self.len += message.Write.LENGTH
         if fsync:
