@@ -41,8 +41,7 @@ class File(object):
         # Couldn't lock the commit log so try to create it.  If it can't be
         # created, os.open will raise and OSError and the calling code must
         # skip this commit log for now.
-        #   FIXME This is not Python3-friendly.
-        except OSError, e:
+        except OSError, e: # FIXME for Python3.
             if not create:
                 raise e
             self.fd = os.open(pathname2, flags | self.CREAT, self.CLEAN)
@@ -54,7 +53,7 @@ class File(object):
         # unlock the file and re-raise the OSError.
         try:
             self.fd = os.open(pathname2, flags)
-        except OSError, e:
+        except OSError, e: # FIXME for Python3.
             os.unlink("{0}/lock-{1:010}".format(settings.DIRNAME, self.index))
             raise e
 
