@@ -3,10 +3,11 @@ A naive implementation of the permanent storage interface.
 """
 
 from countd import settings
+from countd.permanent import abstract
 import locks
 import fcntl, os, struct, sys
 
-class Keyspace(object):
+class Keyspace(abstract.Keyspace):
     """
     A keyspace.
     """
@@ -139,7 +140,7 @@ class Keyspace(object):
             raise StopIteration()
         return self._unpack(buf)
 
-class Index(object):
+class Index(abstract.Index):
     """
     A (currently fictional) index for quickly determining the current
     position of a key in a keyspace.
@@ -188,7 +189,7 @@ class Index(object):
             raise StopIteration()
         return self._unpack(buf)
 
-class Deltas(object):
+class Deltas(abstract.Deltas):
     """
     A (currently fictional) index for quickly finding the offset at which
     a key with the given count should be placed.
