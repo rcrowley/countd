@@ -17,7 +17,7 @@ class Keyspace(object):
     READ = os.O_RDONLY
     WRITE = os.O_RDWR | os.O_CREAT
 
-    def __init__(self, keyspace, flags):
+    def __init__(self, keyspace, flags, index, deltas):
         try:
             os.mkdir("{0}/{1}".format(settings.DIRNAME, keyspace), 0o700)
         except OSError:
@@ -26,8 +26,8 @@ class Keyspace(object):
             settings.DIRNAME, keyspace
         ), flags, 0o600)
         self.locks = locks.Locks()
-        self.index = Index(keyspace)
-        self.deltas = Deltas(keyspace)
+        self.index = index
+        self.deltas = deltas
 
     def __del__(self):
         if hasattr(self, "fd"):
@@ -66,32 +66,38 @@ class Keyspace(object):
         """
         Increment key's count and resort the keyspace on disk.
         """
-        try:
+        while 1:
+            try:
 
-            # Update a key that's already present.
-            offset = self.index.find(key)
-            if offset is not None:
-                r = self.range(offset, 1, fcntl.LOCK_EX)
-                if r is None:
+                # Update a key that's already present.
+                offset = self.index.find(key)
+                if offset is not None:
+                    r = self.range(offset, 1, fcntl.LOCK_EX)
+                    if r is None:
+                        self.locks.unlock()
+                        return False
+                    count = r.next()[1]
+                    if not self._update(key, count + increment, 0, offset):
+                        self.locks.unlock()
+                        return False
+
+                # Place a new key.
+                elif not self._update(key, increment):
                     self.locks.unlock()
                     return False
-                count = r.next()[1]
-                if not self._update(key, count + increment, 0, offset):
-                    self.locks.unlock()
-                    return False
 
-            # Place a new key.
-            elif not self._update(key, increment):
                 self.locks.unlock()
+                if fsync:
+                    os.fsync(self.fd)
+                return True
+
+            # Prevent EDEADLOCK from ruining our day.
+            except IOError as e:
+                print(e)
+                self.locks.unlock()
+
+            except OSError:
                 return False
-
-            self.locks.unlock()
-            if fsync:
-                os.fsync(self.fd)
-            return True
-
-        except OSError:
-            return False
 
     def _update(self, key, count, offset=0, empty_offset=None):
         offset = self.deltas.find(count, offset)
@@ -139,7 +145,13 @@ class Index(object):
     position of a key in a keyspace.
     """
 
-    def __init__(self, keyspace):
+    LENGTH = settings.COUNT + settings.KEY
+    FORMAT = "<q{0}c".format(settings.KEYSPACE)
+
+    READ = os.O_RDONLY
+    WRITE = os.O_RDWR | os.O_CREAT
+
+    def __init__(self, keyspace, flags):
         self.fd = os.open("{0}/{1}/keyspace".format(
             settings.DIRNAME, keyspace
         ), os.O_RDONLY)
@@ -149,7 +161,7 @@ class Index(object):
             os.close(self.fd)
 
     def _unpack(self, buf):
-        return "".join(struct.unpack(Keyspace.FORMAT,
+        return "".join(struct.unpack(self.FORMAT,
             buf)[1:settings.KEY]).strip("\x00")
 
     def find(self, key):
@@ -158,7 +170,7 @@ class Index(object):
         """
         for k in self:
             if k == key:
-                return os.lseek(self.fd, 0, os.SEEK_CUR) / Keyspace.LENGTH - 1
+                return os.lseek(self.fd, 0, os.SEEK_CUR) / self.LENGTH - 1
 
     def update(self, key, offset):
         """
@@ -171,8 +183,8 @@ class Index(object):
         os.lseek(self.fd, 0, os.SEEK_SET)
         return self
     def next(self):
-        buf = os.read(self.fd, Keyspace.LENGTH)
-        if Keyspace.LENGTH != len(buf):
+        buf = os.read(self.fd, self.LENGTH)
+        if self.LENGTH != len(buf):
             raise StopIteration()
         return self._unpack(buf)
 
@@ -182,7 +194,13 @@ class Deltas(object):
     a key with the given count should be placed.
     """
 
-    def __init__(self, keyspace):
+    LENGTH = settings.COUNT + settings.KEY
+    FORMAT = "<q{0}c".format(settings.KEYSPACE)
+
+    READ = os.O_RDONLY
+    WRITE = os.O_RDWR | os.O_CREAT
+
+    def __init__(self, keyspace, flags):
         self.fd = os.open("{0}/{1}/keyspace".format(
             settings.DIRNAME, keyspace
         ), os.O_RDONLY)
@@ -192,7 +210,7 @@ class Deltas(object):
             os.close(self.fd)
 
     def _unpack(self, buf):
-        return struct.unpack(Keyspace.FORMAT, buf)[0]
+        return struct.unpack(self.FORMAT, buf)[0]
 
     def find(self, count, offset=0):
         """
@@ -201,7 +219,7 @@ class Deltas(object):
         """
         for c in self.iter(offset):
             if c < count:
-                return os.lseek(self.fd, 0, os.SEEK_CUR) / Keyspace.LENGTH - 1
+                return os.lseek(self.fd, 0, os.SEEK_CUR) / self.LENGTH - 1
 
     def update(self, count, offset):
         """
@@ -214,10 +232,10 @@ class Deltas(object):
     def __iter__(self):
         return self.iter(0)
     def iter(self, offset):
-        os.lseek(self.fd, Keyspace.LENGTH * offset, os.SEEK_SET)
+        os.lseek(self.fd, self.LENGTH * offset, os.SEEK_SET)
         return self
     def next(self):
-        buf = os.read(self.fd, Keyspace.LENGTH)
-        if Keyspace.LENGTH != len(buf):
+        buf = os.read(self.fd, self.LENGTH)
+        if self.LENGTH != len(buf):
             raise StopIteration()
         return self._unpack(buf)
