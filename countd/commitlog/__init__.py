@@ -40,7 +40,7 @@ class CommitLog(object):
             try:
                 File(i, File.WRITE, False)
                 self.files += 1
-            except OSError, e: # FIXME for Python3.
+            except OSError as e:
                 if errno.ENOENT == e[0]:
                     break
 
@@ -79,7 +79,7 @@ class CommitLog(object):
                             File.WRITE == self.flags)
                         self.files += 1
                         break
-                    except OSError, e: # FIXME for Python3.
+                    except OSError as e:
                         if errno.ENOENT == e[0]:
                             return False
                         self.files += 1
