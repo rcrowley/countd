@@ -11,6 +11,9 @@ class Locks(object):
         self._locks = {}
 
     def lock(self, fd, offset, length, mode):
+        """
+        Lock the requested region or raise an IOError if it would deadlock.
+        """
         fcntl.lockf(fd, mode, length, offset)
         if fcntl.LOCK_UN == mode:
             del self._locks[fd][offset][length]
@@ -24,6 +27,11 @@ class Locks(object):
             self._locks[fd][offset].setdefault(length, True)
 
     def unlock(self, fd=None, offset=None, length=None):
+        """
+        Unlock some or all of the locks held by this process.  It doesn't
+        make sense to supply the arguments in any order but the defined
+        order above.
+        """
         if fd is None:
             for fd in self._locks.keys():
                 self.unlock(fd, offset, length)
