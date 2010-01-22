@@ -31,9 +31,11 @@ def main():
 
             # Write the updates to permanent storage
             for k, l in keyspaces.iteritems():
-                keyspace = permanent.Keyspace(k, permanent.Keyspace.WRITE,
-                    permanent.Index(keyspace, permanent.Index.WRITE),
-                    permanent.Deltas(keyspace, permanent.Deltas.WRITE))
+                keyspace = permanent.Keyspace(
+					k, permanent.Keyspace.WRITE,
+                    permanent.Index(k, permanent.Index.WRITE),
+                    permanent.Deltas(k, permanent.Deltas.WRITE)
+				)
                 for k, i in l:
                     keyspace.update(k, i)
                 del keyspace # Force destructor to be called now
