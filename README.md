@@ -3,21 +3,21 @@ countd(1) -- counter server
 
 ## SYNOPSIS
 
-countd-read
-countd-write
-countd-worker
+	countd-read
+	countd-write
+	countd-worker
 
 ## DESCRIPTION
 
-countd stores sorted sets of counters.  Each set is called a keyspace and contains counters identified by keys.  A process writes to countd by sending a message containing a keyspace, key, and increment to the countd-write daemon.  A process reads from countd by sending a message containing a keyspace, offset, and length to the countd-read daemon.  See PROTOCOL below for further discussion.
+`countd` stores sorted sets of counters.  Each set is called a keyspace and contains counters identified by keys.  A process writes to countd by sending a message containing a keyspace, key, and increment to the `countd-write` daemon.  A process reads from `countd` by sending a message containing a keyspace, offset, and length to the `countd-read` daemon.  See PROTOCOL below for further discussion.
 
-countd is implemented in Python and makes heavy use of the `os` module, which exposes unbuffered I/O functions and fcntl(2).  Synchronization between processes is accomplished using link(2), unlink(2) and fcntl(2)'s advisory locking.
+`countd` is implemented in Python and makes heavy use of the `os` module, which exposes unbuffered I/O functions and `fcntl(2)`.  Synchronization between processes is accomplished using `link(2)`, `unlink(2)` and `fcntl(2)`'s advisory locking.
 
-countd-write is responsible for a pool of commit logs which are rotated when they become full.  Empty commit logs which are available for writes have permissions 0400; full log files which need to be read have permissions 0200.  Commit log filenames are 10-digit, zero-padded integers and start from zero.  A commit log must be successfully hard link(2)ed to its filename prefixed by "lock-" before the process may open(2) it.  When countd-write fills a commit log, its permissions are changed to 0200 and the lock is unlink(2)ed.
+`countd-write` is responsible for a pool of commit logs which are rotated when they become full.  Empty commit logs which are available for writes have permissions 0400; full commit logs which need to be read have permissions 0200.  Commit log filenames are 10-digit, zero-padded integers and start from zero.  A commit log must be successfully hard `link(2)`ed to its filename prefixed by "lock-" before the process may `open(2)` it.  When `countd-write` fills a commit log, its permissions are changed to 0200 and the lock is `unlink(2)`ed.
 
-countd-worker repeatedly locks a full commit log with permissions 0200 and resolves the messages in it with permanent storage.  Each keyspace is stored in its own file in permanent storage, which is kept sorted to support efficient reads.  The file format and supporting indices are very much works in progress.  countd-worker is completely decoupled from countd-write, which means read-your-own-writes consistency is not guaranteed or likely.
+`countd-worker` repeatedly locks a full commit log with permissions 0200 and resolves the messages in it with permanent storage.  Each keyspace is stored in its own file in permanent storage, which is kept sorted to support efficient reads.  The file format and supporting indices are very much works in progress.  `countd-worker` is completely decoupled from `countd-write`, which means read-your-own-writes consistency is not guaranteed or likely.
 
-countd-read is imaginary.
+`countd-read` is imaginary.
 
 ## OPTIONS
 
