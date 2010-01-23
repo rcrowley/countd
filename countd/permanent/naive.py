@@ -61,7 +61,8 @@ class Keyspace(abstract.Keyspace):
                 break
             yield self._unpack(buf)
         if fcntl.LOCK_SH == mode:
-            self.locks.unlock(self.fd, offset, length)
+            self.locks.unlock(self.fd, self.LENGTH * offset,
+                self.LENGTH * length)
 
     def update(self, key, increment, fsync=True):
         """
@@ -175,7 +176,7 @@ class Index(abstract.Index):
 
     def update(self, key, offset):
         """
-        Record the offset at which the key can be found.
+        Nothing to do here!
         """
         pass
 
@@ -224,8 +225,7 @@ class Deltas(abstract.Deltas):
 
     def update(self, count, offset):
         """
-        Record the offset at which the last key with the given count can
-        be found.
+        Nothing to do here!
         """
         pass
 
