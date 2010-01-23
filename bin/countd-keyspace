@@ -12,14 +12,18 @@ def main(keyspace):
         settings.DIRNAME,
         keyspace
     ))
-    keyspace = permanent.Keyspace(keyspace, permanent.Keyspace.READ)
-    offset, length = 0, 0
+    keyspace = permanent.Keyspace(
+        keyspace, permanent.Keyspace.READ,
+        permanent.Index(keyspace, permanent.Keyspace.READ),
+        permanent.Deltas(keyspace, permanent.Keyspace.READ)
+    )
+    offset = 0
     while 1:
         r = keyspace.range(offset, 200)
+        length = 0
         for key, count in r:
             print("{0:69} {1:>10}".format(key, count))
             length += 1
         if 200 != length:
             break
         offset += length
-        length = 0
