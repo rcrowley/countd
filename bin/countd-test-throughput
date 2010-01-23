@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+from countd import settings
+import optfunc
+import sys
+
+@optfunc.main
+def main(workers=1, writers=1, keyspaces=1000, keys=1000):
+
+    if 1 != writers:
+        sys.stderr.write("[countd-test-throughput] more than one writer " +
+            "would require a load balancer\n")
+        return 1
+
+    # TODO Fork writers and workers and commence hammering them with writes.
+
+    # Observe I/O transfers/s and MB_wrtn/s, the rate of growth in the
+    # number of commit logs and if the rate of growth ever settles to zero,
+    # the rate at which writes can succeed, and %iowait.
