@@ -21,8 +21,12 @@ class Deltas(abstract.Deltas):
     WRITE = os.O_RDWR | os.O_CREAT
 
     def __init__(self, keyspace, flags):
-        self.fd = os.open("{0}/{1}/keyspace".format(
-            settings.DIRNAME, keyspace
+        try:
+            os.mkdir(os.path.join(settings.DIRNAME, keyspace), 0o700)
+        except OSError as e:
+            pass
+        self.fd = os.open(os.path.join(
+            settings.DIRNAME, keyspace, "keyspace"
         ), os.O_RDONLY)
 
     def __del__(self):

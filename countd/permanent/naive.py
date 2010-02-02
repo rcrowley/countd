@@ -20,11 +20,11 @@ class Keyspace(abstract.Keyspace):
 
     def __init__(self, keyspace, flags, index, deltas):
         try:
-            os.mkdir("{0}/{1}".format(settings.DIRNAME, keyspace), 0o700)
-        except OSError:
+            os.mkdir(os.path.join(settings.DIRNAME, keyspace), 0o700)
+        except OSError as e:
             pass
-        self.fd = os.open("{0}/{1}/keyspace".format(
-            settings.DIRNAME, keyspace
+        self.fd = os.open(os.path.join(
+            settings.DIRNAME, keyspace, "keyspace"
         ), flags, 0o600)
         self.locks = locks.Locks()
         self.index = index
@@ -150,13 +150,17 @@ class Index(abstract.Index):
     LENGTH = settings.COUNT + settings.KEY
     FORMAT = "<q{0}c".format(settings.KEYSPACE)
 
-    READ = os.O_RDONLY
+    READ = os.O_RDONLY | os.O_CREAT
     WRITE = os.O_RDWR | os.O_CREAT
 
     def __init__(self, keyspace, flags):
-        self.fd = os.open("{0}/{1}/keyspace".format(
-            settings.DIRNAME, keyspace
-        ), os.O_RDONLY)
+        try:
+            os.mkdir(os.path.join(settings.DIRNAME, keyspace), 0o700)
+        except OSError as e:
+            pass
+        self.fd = os.open(os.path.join(
+            settings.DIRNAME, keyspace, "keyspace"
+        ), self.READ, 0o600)
 
     def __del__(self):
         if hasattr(self, "fd"):
@@ -199,13 +203,17 @@ class Deltas(abstract.Deltas):
     LENGTH = settings.COUNT + settings.KEY
     FORMAT = "<q{0}c".format(settings.KEYSPACE)
 
-    READ = os.O_RDONLY
+    READ = os.O_RDONLY | os.O_CREAT
     WRITE = os.O_RDWR | os.O_CREAT
 
     def __init__(self, keyspace, flags):
-        self.fd = os.open("{0}/{1}/keyspace".format(
-            settings.DIRNAME, keyspace
-        ), os.O_RDONLY)
+        try:
+            os.mkdir(os.path.join(settings.DIRNAME, keyspace), 0o700)
+        except OSError as e:
+            pass
+        self.fd = os.open(os.path.join(
+            settings.DIRNAME, keyspace, "keyspace"
+        ), self.READ, 0o600)
 
     def __del__(self):
         if hasattr(self, "fd"):
